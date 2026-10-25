@@ -151,6 +151,12 @@ try {
     Click (Find "ConfirmPaymentButton")     # closes the sale
     "mouse sale result: $((Find 'LastSaleText').Current.Name)"
 
+    # Both sales became pending NFC-e documents
+    Click (FindByName "Notas fiscais")
+    "fiscal documents: $((Find 'SummaryText').Current.Name)"
+    Shot "8b-fiscal-documents"
+    Click (FindByName "Caixa")
+
     # Hamburger slides the side menu closed and open (animated: the items stay in the tree, but off screen)
     function MenuVisible { ((FindByName "Produtos").Current.BoundingRectangle.Right - $script:win.Current.BoundingRectangle.Left) -gt 100 }
     Click (Find "MenuToggle")

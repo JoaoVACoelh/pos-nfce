@@ -8,6 +8,7 @@ using PosNfce.Catalog.Adapters;
 using PosNfce.Checkout.Adapters;
 using PosNfce.Desktop.Catalog.Ibpt;
 using PosNfce.Desktop.Checkout;
+using PosNfce.Desktop.Fiscal.Documents;
 using PosNfce.Desktop.Catalog.Products;
 using PosNfce.Desktop.Catalog.TaxRules;
 using PosNfce.Desktop.Fiscal.Issuer;
@@ -47,6 +48,7 @@ public partial class App : Application
             services.AddSingleton<MainViewModel>();
             services.AddSingleton<MainWindow>();
             services.AddTransient<CheckoutViewModel>();
+            services.AddTransient<FiscalDocumentsViewModel>();
             services.AddTransient<ProductsViewModel>();
             services.AddTransient<TaxRulesViewModel>();
             services.AddTransient<IssuerViewModel>();

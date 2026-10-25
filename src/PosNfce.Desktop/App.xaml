@@ -5,7 +5,8 @@
              xmlns:taxRules="clr-namespace:PosNfce.Desktop.Catalog.TaxRules"
              xmlns:issuer="clr-namespace:PosNfce.Desktop.Fiscal.Issuer"
              xmlns:ibpt="clr-namespace:PosNfce.Desktop.Catalog.Ibpt"
-             xmlns:checkout="clr-namespace:PosNfce.Desktop.Checkout">
+             xmlns:checkout="clr-namespace:PosNfce.Desktop.Checkout"
+             xmlns:documents="clr-namespace:PosNfce.Desktop.Fiscal.Documents">
     <Application.Resources>
         <!-- Colors -->
         <SolidColorBrush x:Key="PageBrush" Color="#F5F6F8" />
@@ -29,6 +30,9 @@
         <!-- Each page ViewModel is shown with its View -->
         <DataTemplate DataType="{x:Type checkout:CheckoutViewModel}">
             <checkout:CheckoutView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type documents:FiscalDocumentsViewModel}">
+            <documents:FiscalDocumentsView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type products:ProductsViewModel}">
             <products:ProductsView />

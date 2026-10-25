@@ -250,7 +250,15 @@ public sealed partial class CheckoutViewModel(UseCaseRunner useCases) : FormView
         LastSale = completed.Change > 0
             ? $"Venda concluída: {new Money(completed.Total)}. TROCO {new Money(completed.Change)}"
             : $"Venda concluída: {new Money(completed.Total)}.";
-        Message = "";
+        if (completed.AfterSaleWarning is { } warning)
+        {
+            ShowError(warning);
+        }
+        else
+        {
+            Message = "";
+        }
+
         FocusRequested?.Invoke(CheckoutFocus.Scan);
     }
 

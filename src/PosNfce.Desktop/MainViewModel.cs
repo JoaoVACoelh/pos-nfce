@@ -6,6 +6,7 @@ using PosNfce.Desktop.Catalog.Ibpt;
 using PosNfce.Desktop.Checkout;
 using PosNfce.Desktop.Catalog.Products;
 using PosNfce.Desktop.Catalog.TaxRules;
+using PosNfce.Desktop.Fiscal.Documents;
 using PosNfce.Desktop.Fiscal.Issuer;
 using PosNfce.SharedKernel;
 
@@ -43,6 +44,7 @@ public sealed partial class MainViewModel : ObservableObject
     public IReadOnlyList<NavigationItem> Menu { get; } =
     [
         new("Caixa", typeof(CheckoutViewModel)),
+        new("Notas fiscais", typeof(FiscalDocumentsViewModel)),
         new("Produtos", typeof(ProductsViewModel)),
         new("Regras tributárias", typeof(TaxRulesViewModel)),
         new("Tabela IBPT", typeof(IbptViewModel)),
