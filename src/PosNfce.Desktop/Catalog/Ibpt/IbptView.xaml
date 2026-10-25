@@ -12,7 +12,7 @@
         <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,12"
                    Text="Valor aproximado dos tributos que aparece no cupom (Lei 12.741/2012). Baixe o arquivo CSV de MG em deolhonoimposto.ibpt.org.br com o CNPJ da loja. Cada tabela tem uma vigência: importe a nova quando a atual vencer." />
 
-        <Border Padding="12" BorderThickness="1" BorderBrush="#D9DDE2" Background="White">
+        <Border Style="{StaticResource Card}" Padding="14">
             <TextBlock x:Name="StatusText" Text="{Binding Status}" TextWrapping="Wrap">
                 <TextBlock.Style>
                     <Style TargetType="TextBlock">

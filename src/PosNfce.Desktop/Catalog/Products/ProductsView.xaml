@@ -25,6 +25,7 @@
                     </TextBox.InputBindings>
                 </TextBox>
             </DockPanel>
+            <Border Style="{StaticResource GridFrame}">
             <DataGrid x:Name="ProductsGrid" ItemsSource="{Binding Products}" SelectedItem="{Binding SelectedProduct}"
                       AutoGenerateColumns="False" IsReadOnly="True" SelectionMode="Single"
                       HeadersVisibility="Column" GridLinesVisibility="Horizontal">
@@ -47,6 +48,7 @@
                     <DataGridCheckBoxColumn Header="Ativo" Binding="{Binding Active}" Width="50" />
                 </DataGrid.Columns>
             </DataGrid>
+            </Border>
         </DockPanel>
 
         <!-- Form -->

@@ -31,9 +31,12 @@ function Find($id) {
     throw "element $id not found"
 }
 function FindByName($name) {
-    $e = $script:win.FindFirst($Tree::Descendants, (New-Object $C ($A::NameProperty, $name)))
-    if (-not $e) { throw "element '$name' not found" }
-    return $e
+    for ($i = 0; $i -lt 20; $i++) {
+        $e = $script:win.FindFirst($Tree::Descendants, (New-Object $C ($A::NameProperty, $name)))
+        if ($e) { return $e }
+        Start-Sleep -Milliseconds 200
+    }
+    throw "element '$name' not found"
 }
 function Fill($id, $text) { (Find $id).GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).SetValue($text) }
 function Click($e) { $e.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke(); Start-Sleep -Milliseconds 700 }
@@ -148,12 +151,15 @@ try {
     Click (Find "ConfirmPaymentButton")     # closes the sale
     "mouse sale result: $((Find 'LastSaleText').Current.Name)"
 
-    # Hamburger hides and shows the side menu
+    # Hamburger slides the side menu closed and open (animated: the items stay in the tree, but off screen)
+    function MenuVisible { ((FindByName "Produtos").Current.BoundingRectangle.Right - $script:win.Current.BoundingRectangle.Left) -gt 100 }
     Click (Find "MenuToggle")
-    $menuHidden = -not $script:win.FindFirst($Tree::Descendants, (New-Object $C ($A::NameProperty, "Produtos")))
+    Start-Sleep -Milliseconds 400
+    $menuHidden = -not (MenuVisible)
     Shot "9-menu-hidden"
     Click (Find "MenuToggle")
-    "menu hidden after toggle: $menuHidden; back: $([bool]$script:win.FindFirst($Tree::Descendants, (New-Object $C ($A::NameProperty, 'Produtos'))))"
+    Start-Sleep -Milliseconds 400
+    "menu hidden after toggle: $menuHidden; back: $(MenuVisible)"
 
     # Smallest window size (1000 x 600): the checkout must still be usable
     $script:win.GetCurrentPattern([System.Windows.Automation.WindowPattern]::Pattern).SetWindowVisualState("Normal")
