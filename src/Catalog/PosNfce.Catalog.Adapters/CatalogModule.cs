@@ -18,6 +18,9 @@ public static class CatalogModule
 
         services.AddScoped<RegisterProduct>();
         services.AddScoped<FindProductByBarcode>();
+        services.AddScoped<ListProducts>();
+        services.AddScoped<UpdateProduct>();
+        services.AddScoped<SetProductActive>();
         services.AddScoped<RegisterTaxRule>();
         services.AddScoped<ListTaxRules>();
 

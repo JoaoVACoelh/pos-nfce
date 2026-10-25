@@ -55,6 +55,21 @@ public sealed class Product
         string unit, Money price, ProductOrigin origin, Guid taxRuleId, bool active) =>
         new(id, code, gtin, description, ncm, cest, unit, price, origin, taxRuleId, active);
 
+    /// <summary>
+    /// Changes the editable data. Code and GTIN stay fixed: they identify the product in documents already issued
+    /// and at the scanner.
+    /// </summary>
+    public void Update(string description, Ncm ncm, Cest? cest, string unit, Money price, ProductOrigin origin, Guid taxRuleId)
+    {
+        Description = Required(description, "Descrição", DescriptionMaxLength);
+        Ncm = ncm;
+        Cest = cest;
+        Unit = Required(unit, "Unidade", UnitMaxLength).ToUpperInvariant();
+        Price = PositivePrice(price);
+        Origin = ValidOrigin(origin);
+        TaxRuleId = taxRuleId != Guid.Empty ? taxRuleId : throw new DomainException("Informe a regra tributária do produto.");
+    }
+
     public void ChangePrice(Money newPrice) => Price = PositivePrice(newPrice);
 
     public void Deactivate() => Active = false;

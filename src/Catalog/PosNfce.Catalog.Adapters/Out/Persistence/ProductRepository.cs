@@ -19,9 +19,39 @@ public sealed class ProductRepository(CatalogDbContext db) : IProductRepository
         return record is null ? null : ToDomain(record);
     }
 
+    public async Task<Product?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var record = await db.Products.AsNoTracking().SingleOrDefaultAsync(p => p.Id == id, cancellationToken);
+        return record is null ? null : ToDomain(record);
+    }
+
+    public async Task<IReadOnlyList<Product>> SearchAsync(string? term, int limit, CancellationToken cancellationToken = default)
+    {
+        var query = db.Products.AsNoTracking();
+
+        if (!string.IsNullOrWhiteSpace(term))
+        {
+            // LIKE in SQLite ignores case for ASCII letters; % and _ typed by the user are escaped so they match literally.
+            var pattern = $"%{term.Replace(@"\", @"\\").Replace("%", @"\%").Replace("_", @"\_")}%";
+            query = query.Where(p =>
+                EF.Functions.Like(p.Description, pattern, @"\")
+                || EF.Functions.Like(p.Code, pattern, @"\")
+                || EF.Functions.Like(p.Gtin, pattern, @"\"));
+        }
+
+        var records = await query.OrderBy(p => p.Description).Take(limit).ToListAsync(cancellationToken);
+        return records.Select(ToDomain).ToList();
+    }
+
     public async Task AddAsync(Product product, CancellationToken cancellationToken = default)
     {
         db.Products.Add(ToRecord(product));
+        await db.SaveChangesAsync(cancellationToken);
+    }
+
+    public async Task UpdateAsync(Product product, CancellationToken cancellationToken = default)
+    {
+        db.Products.Update(ToRecord(product));
         await db.SaveChangesAsync(cancellationToken);
     }
 

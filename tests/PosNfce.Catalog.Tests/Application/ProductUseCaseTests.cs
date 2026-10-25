@@ -1,5 +1,6 @@
 using PosNfce.Catalog.Adapters.Out.Persistence;
 using PosNfce.Catalog.Application.Products;
+using PosNfce.Catalog.Domain.Products;
 using PosNfce.SharedKernel;
 
 namespace PosNfce.Catalog.Tests.Application;
@@ -30,6 +31,71 @@ public sealed class ProductUseCaseTests : IDisposable
     }
 
     private FindProductByBarcode NewFind() => new(new ProductRepository(_database.NewContext()));
+
+    private ListProducts NewList()
+    {
+        var db = _database.NewContext();
+        return new(new ProductRepository(db), new TaxRuleRepository(db));
+    }
+
+    private UpdateProduct NewUpdate()
+    {
+        var db = _database.NewContext();
+        return new(new ProductRepository(db), new TaxRuleRepository(db));
+    }
+
+    [Fact]
+    public async Task Search_matches_description_code_or_gtin_ignoring_case()
+    {
+        await NewRegister().ExecuteAsync(ProductSamples.Command(code: "REF-01", gtin: "7891234567895") with { Description = "Refrigerante lata" });
+        await NewRegister().ExecuteAsync(ProductSamples.Command(code: "PAO", gtin: null) with { Description = "Pao frances" });
+
+        Assert.Equal(["Refrigerante lata"], (await NewList().ExecuteAsync("REFRI")).Select(p => p.Description));
+        Assert.Equal(["Pao frances"], (await NewList().ExecuteAsync("pao")).Select(p => p.Description));
+        Assert.Equal(["Refrigerante lata"], (await NewList().ExecuteAsync("4567895")).Select(p => p.Description));
+        Assert.Equal(2, (await NewList().ExecuteAsync("")).Count);
+    }
+
+    [Fact]
+    public async Task Search_treats_percent_sign_literally()
+    {
+        await NewRegister().ExecuteAsync(ProductSamples.Command() with { Description = "Produto comum" });
+
+        Assert.Empty(await NewList().ExecuteAsync("%"));
+    }
+
+    [Fact]
+    public async Task List_shows_the_tax_rule_name()
+    {
+        await NewRegister().ExecuteAsync(ProductSamples.Command());
+
+        Assert.Equal("Regra de teste", (await NewList().ExecuteAsync(null)).Single().TaxRuleName);
+    }
+
+    [Fact]
+    public async Task Updated_data_is_saved_but_code_and_gtin_stay()
+    {
+        var id = await NewRegister().ExecuteAsync(ProductSamples.Command(code: "001", gtin: "7891234567895"));
+
+        await NewUpdate().ExecuteAsync(new UpdateProductCommand(
+            id, "Novo nome", "11111111", "0300700", "kg", 15.75m, ProductOrigin.ForeignDirectImport, ProductSamples.TaxRuleId));
+
+        var product = (await NewList().ExecuteAsync(null)).Single();
+        Assert.Equal(("001", "7891234567895"), (product.Code, product.Gtin));
+        Assert.Equal(("Novo nome", "11111111", "0300700", "KG", 15.75m), (product.Description, product.Ncm, product.Cest, product.Unit, product.Price));
+        Assert.Equal(ProductOrigin.ForeignDirectImport, product.Origin);
+    }
+
+    [Fact]
+    public async Task Deactivated_product_is_not_found_at_the_checkout_but_stays_in_the_list()
+    {
+        var id = await NewRegister().ExecuteAsync(ProductSamples.Command(gtin: "7891234567895"));
+
+        await new SetProductActive(new ProductRepository(_database.NewContext())).ExecuteAsync(id, active: false);
+
+        Assert.Null(await NewFind().ExecuteAsync("7891234567895"));
+        Assert.False((await NewList().ExecuteAsync(null)).Single().Active);
+    }
 
     [Fact]
     public async Task Registered_product_is_found_by_its_gtin()
