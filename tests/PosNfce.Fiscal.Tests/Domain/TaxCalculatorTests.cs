@@ -79,16 +79,17 @@ public class TaxCalculatorTests
     [Fact]
     public void Approximate_tax_adds_the_three_ibpt_rates_over_the_net_value()
     {
-        // 9,00 × (13,45 + 18,00 + 0) % = 2,8305 → 2,83
+        // 9,00 × 13,45% = 1,2105 → 1,21 federal; 9,00 × 18% = 1,62 state; 0 municipal
         var taxes = Calculate(Item(total: 10m, discount: 1m), new ApproximateRates(13.45m, 18m, 0m));
 
-        Assert.Equal(new Money(2.83m), taxes.ApproximateTax);
+        Assert.Equal((1.21m, 1.62m, 0m, 2.83m),
+            (taxes.Approximate.Federal.Amount, taxes.Approximate.State.Amount, taxes.Approximate.Municipal.Amount, taxes.Approximate.Total.Amount));
     }
 
     [Fact]
     public void Without_ibpt_rates_the_approximate_tax_is_zero()
     {
-        Assert.Equal(Money.Zero, Calculate(Item()).ApproximateTax);
+        Assert.Equal(Money.Zero, Calculate(Item()).Approximate.Total);
     }
 
     [Fact]

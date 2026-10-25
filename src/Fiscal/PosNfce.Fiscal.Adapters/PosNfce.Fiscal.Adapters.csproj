@@ -4,12 +4,14 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" />
+    <PackageReference Include="Unimake.DFe" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\PosNfce.Fiscal.Application\PosNfce.Fiscal.Application.csproj" />
     <!-- Allowed cross-module reference: only another module's use cases and contracts (SaleCompleted). -->
     <ProjectReference Include="..\..\Checkout\PosNfce.Checkout.Application\PosNfce.Checkout.Application.csproj" />
+    <ProjectReference Include="..\..\Catalog\PosNfce.Catalog.Application\PosNfce.Catalog.Application.csproj" />
   </ItemGroup>
 
 </Project>

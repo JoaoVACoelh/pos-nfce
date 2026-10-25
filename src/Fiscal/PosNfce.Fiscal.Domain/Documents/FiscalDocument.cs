@@ -57,6 +57,9 @@ public sealed class FiscalDocument
     public FiscalDocumentStatus Status { get; private set; }
     public int? Series { get; private set; }
     public long? Number { get; private set; }
+
+    /// <summary>44-digit access key, known once the XML is signed.</summary>
+    public string? AccessKey { get; private set; }
     public Money Discount { get; }
     public Money Change { get; }
 
@@ -118,8 +121,8 @@ public sealed class FiscalDocument
 
     public static FiscalDocument Restore(
         Guid id, Guid saleId, DateTimeOffset soldAt, FiscalDocumentStatus status, int? series, long? number,
-        Money discount, Money change, IEnumerable<FiscalItem> items, IEnumerable<FiscalPayment> payments) =>
-        new(id, saleId, soldAt, status, series, number, discount, change, items, payments);
+        Money discount, Money change, IEnumerable<FiscalItem> items, IEnumerable<FiscalPayment> payments, string? accessKey = null) =>
+        new(id, saleId, soldAt, status, series, number, discount, change, items, payments) { AccessKey = accessKey };
 
     /// <summary>Sets the series and number reserved for this document. Happens once, right before issuing.</summary>
     public void AssignNumber(int series, long number)
@@ -135,5 +138,21 @@ public sealed class FiscalDocument
         }
 
         (Series, Number) = (series, number);
+    }
+
+    /// <summary>Records the access key of the signed XML. The document stays pending until SEFAZ answers.</summary>
+    public void RecordSignature(string accessKey)
+    {
+        if (accessKey.Length != 44 || !accessKey.All(char.IsAsciiDigit))
+        {
+            throw new DomainException("Chave de acesso deve ter 44 dígitos.");
+        }
+
+        if (Status != FiscalDocumentStatus.Pending || Number is null)
+        {
+            throw new DomainException("Só uma nota pendente e numerada pode ser assinada.");
+        }
+
+        AccessKey = accessKey;
     }
 }

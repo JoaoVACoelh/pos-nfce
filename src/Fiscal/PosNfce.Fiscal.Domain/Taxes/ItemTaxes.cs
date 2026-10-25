@@ -35,5 +35,16 @@ public sealed record ApproximateRates(decimal Federal, decimal State, decimal Mu
     public decimal Total => Federal + State + Municipal;
 }
 
+/// <summary>Approximate taxes of the item in reais (Lei 12.741/2012), shown on the receipt by sphere.</summary>
+public sealed record ApproximateTaxes(Money Federal, Money State, Money Municipal)
+{
+    public static ApproximateTaxes None { get; } = new(Money.Zero, Money.Zero, Money.Zero);
+
+    public Money Total => Federal + State + Municipal;
+
+    public static ApproximateTaxes operator +(ApproximateTaxes a, ApproximateTaxes b) =>
+        new(a.Federal + b.Federal, a.State + b.State, a.Municipal + b.Municipal);
+}
+
 /// <summary>Everything the NFC-e needs about the taxes of one item. <paramref name="IbsCbs"/> null: the group is not filled.</summary>
-public sealed record ItemTaxes(SimplesIcms Icms, PisCofins Pis, PisCofins Cofins, Money ApproximateTax, IbsCbsTaxes? IbsCbs);
+public sealed record ItemTaxes(SimplesIcms Icms, PisCofins Pis, PisCofins Cofins, ApproximateTaxes Approximate, IbsCbsTaxes? IbsCbs);

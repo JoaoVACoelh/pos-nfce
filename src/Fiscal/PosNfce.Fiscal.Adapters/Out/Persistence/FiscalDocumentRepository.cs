@@ -17,6 +17,22 @@ public sealed class FiscalDocumentRepository(FiscalDbContext db) : IFiscalDocume
         db.ChangeTracker.Clear();
     }
 
+    public async Task<FiscalDocument?> FindAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var record = await db.Documents.AsNoTracking().Include(d => d.Items).Include(d => d.Payments)
+            .SingleOrDefaultAsync(d => d.Id == id, cancellationToken);
+        return record is null ? null : ToDomain(record);
+    }
+
+    public async Task UpdateAsync(FiscalDocument document, CancellationToken cancellationToken = default)
+    {
+        await db.Documents.Where(d => d.Id == document.Id).ExecuteUpdateAsync(set => set
+            .SetProperty(d => d.Status, (int)document.Status)
+            .SetProperty(d => d.Series, document.Series)
+            .SetProperty(d => d.Number, document.Number)
+            .SetProperty(d => d.AccessKey, document.AccessKey), cancellationToken);
+    }
+
     public async Task<IReadOnlyList<FiscalDocument>> ListRecentAsync(int limit, CancellationToken cancellationToken = default)
     {
         // Ordered in memory: SQLite stores DateTimeOffset as text, which EF can't order by in SQL.
@@ -30,7 +46,8 @@ public sealed class FiscalDocumentRepository(FiscalDbContext db) : IFiscalDocume
         r.Items.Select(i => new FiscalItem(
             i.Line, i.Code, i.Gtin, i.Description, i.Unit, i.Quantity, new Money(i.UnitPrice), new Money(i.GrossTotal), new Money(i.Discount),
             i.Ncm, i.Cest, i.Origin, i.Cfop, i.Csosn, i.PisCst, i.PisRate, i.CofinsCst, i.CofinsRate, i.IbsCbsCst, i.ClassTrib, i.IbsCbsReduction)),
-        r.Payments.Select(p => new FiscalPayment(p.Method, new Money(p.Amount), p.Integrated)));
+        r.Payments.Select(p => new FiscalPayment(p.Method, new Money(p.Amount), p.Integrated)),
+        r.AccessKey);
 
     private static FiscalDocumentRecord ToRecord(FiscalDocument d) => new()
     {
@@ -40,6 +57,7 @@ public sealed class FiscalDocumentRepository(FiscalDbContext db) : IFiscalDocume
         Status = (int)d.Status,
         Series = d.Series,
         Number = d.Number,
+        AccessKey = d.AccessKey,
         Discount = d.Discount.Amount,
         Total = d.Total.Amount,
         Change = d.Change.Amount,

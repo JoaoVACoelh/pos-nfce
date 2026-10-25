@@ -9,6 +9,7 @@ public sealed class FiscalDocumentRecord
     public int Status { get; set; }
     public int? Series { get; set; }
     public long? Number { get; set; }
+    public string? AccessKey { get; set; }
     public decimal Discount { get; set; }
     public decimal Total { get; set; }
     public decimal Change { get; set; }

@@ -33,7 +33,7 @@ Console.WriteLine($"Database: {Path.Combine(dataFolder, "pos.db")}");
 
 var services = new ServiceCollection()
     .AddCatalogModule(connectionString)
-    .AddFiscalModule(connectionString)
+    .AddFiscalModule(connectionString, dataFolder)
     .BuildServiceProvider();
 await services.MigrateCatalogDatabaseAsync();
 await services.MigrateFiscalDatabaseAsync();

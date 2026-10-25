@@ -160,6 +160,14 @@ try {
     # Both sales became pending NFC-e documents
     Click (FindByName "Notas fiscais")
     "fiscal documents: $((Find 'SummaryText').Current.Name)"
+    # Signed XML of the latest one (homologation, development certificate, nothing sent)
+    $docs = Find "DocumentsGrid"
+    $firstRow = $docs.FindFirst($Tree::Children, (New-Object $C ($A::ControlTypeProperty, [System.Windows.Automation.ControlType]::DataItem)))
+    $firstRow.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Select()
+    Start-Sleep -Milliseconds 400
+    Click (Find "PrepareXmlButton")
+    Start-Sleep -Seconds 2
+    "signed xml: $(Message)"
     Shot "8b-fiscal-documents"
     Click (FindByName "Caixa")
 

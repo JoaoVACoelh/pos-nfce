@@ -41,7 +41,7 @@ public partial class App : Application
             services
                 .AddCatalogModule(ConnectionString)
                 .AddCheckoutModule(ConnectionString)
-                .AddFiscalModule(ConnectionString)
+                .AddFiscalModule(ConnectionString, DataFolder)
                 .AddReportsModule();
 
             services.AddSingleton<UseCaseRunner>();

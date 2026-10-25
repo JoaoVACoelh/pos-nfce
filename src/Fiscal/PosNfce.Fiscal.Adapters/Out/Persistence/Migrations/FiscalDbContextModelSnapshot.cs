@@ -23,6 +23,10 @@ namespace PosNfce.Fiscal.Adapters.Out.Persistence.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("AccessKey")
+                        .HasMaxLength(44)
+                        .HasColumnType("TEXT");
+
                     b.Property<decimal>("Change")
                         .HasColumnType("TEXT");
 

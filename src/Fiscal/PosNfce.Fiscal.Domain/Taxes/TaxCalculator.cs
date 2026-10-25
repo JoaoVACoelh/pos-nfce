@@ -68,7 +68,12 @@ public sealed class SimplesNacionalTaxStrategy : ITaxStrategy
             Icms(item),
             pis,
             cofins,
-            approximateRates is null ? Money.Zero : TaxCalculator.Cents(net.Amount * approximateRates.Total / 100m),
+            approximateRates is null
+                ? ApproximateTaxes.None
+                : new ApproximateTaxes(
+                    TaxCalculator.Cents(net.Amount * approximateRates.Federal / 100m),
+                    TaxCalculator.Cents(net.Amount * approximateRates.State / 100m),
+                    TaxCalculator.Cents(net.Amount * approximateRates.Municipal / 100m)),
             ibsCbs);
     }
 
