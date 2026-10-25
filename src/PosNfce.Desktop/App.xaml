@@ -78,7 +78,7 @@
             <Setter Property="BorderThickness" Value="1" />
             <Setter Property="CornerRadius" Value="8" />
             <Setter Property="Padding" Value="12,10" />
-            <Setter Property="Margin" Value="0,0,0,8" />
+            <Setter Property="Margin" Value="0,8,0,8" />
         </Style>
         <!-- White rounded panel: totals and status boxes -->
         <Style x:Key="Card" TargetType="Border">
@@ -181,6 +181,8 @@
         <Style TargetType="ComboBox">
             <Setter Property="Padding" Value="8,6,28,6" />
             <Setter Property="FontSize" Value="14" />
+            <!-- Same height as the text boxes next to it -->
+            <Setter Property="MinHeight" Value="44" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="ComboBox">
@@ -189,7 +191,9 @@
                                           IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}" />
                             <ContentPresenter Margin="{TemplateBinding Padding}" IsHitTestVisible="False" VerticalAlignment="Center"
                                               Content="{TemplateBinding SelectionBoxItem}"
-                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}" />
+                                              ContentTemplate="{TemplateBinding SelectionBoxItemTemplate}"
+                                              ContentTemplateSelector="{TemplateBinding ItemTemplateSelector}"
+                                              ContentStringFormat="{TemplateBinding SelectionBoxItemStringFormat}" />
                             <Popup IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom" AllowsTransparency="True"
                                    Focusable="False" PopupAnimation="Fade">
                                 <Border Background="White" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="8"
