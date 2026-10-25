@@ -22,6 +22,7 @@ using PosNfce.Catalog.Application.TaxRules;
 using PosNfce.Catalog.Domain.Products;
 using PosNfce.Fiscal.Adapters;
 using PosNfce.Fiscal.Application.Issuers;
+using PosNfce.Fiscal.Application.Taxes;
 using PosNfce.SharedKernel;
 
 var root = Directory.GetCurrentDirectory();
@@ -132,6 +133,13 @@ foreach (var p in products)
             p.Code, gtin, p.Description, p.Ncm, Cest: null, p.Unit, p.Price, ProductOrigin.Domestic, rules[p.Rule])));
     }
 }
+
+// --- IBS/CBS rates: 2026 test year (IBS 0,1% state, 0% municipal, CBS 0,9%). Only 2026 is registered: the rates of
+// later years depend on the Senate's reference rates and must come from the accountant. --------------------------------
+Console.WriteLine("IBS/CBS rates");
+await Run<RegisterIbsCbsRates>("2026 test year", u => u.ExecuteAsync(new RegisterIbsCbsRatesCommand(
+    new DateOnly(2026, 1, 1), IbsState: 0.1m, IbsMunicipal: 0m, Cbs: 0.9m,
+    Source: "LC 214/2025, ano-teste 2026 (confirmar com o contador)")));
 
 // --- IBPT (sample file, fictitious rates) --------------------------------------------------------------------
 Console.WriteLine("IBPT");

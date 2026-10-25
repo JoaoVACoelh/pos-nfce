@@ -43,7 +43,7 @@ public sealed class TaxRuleRepository(CatalogDbContext db) : ITaxRuleRepository
         Percentage.Of(r.PisRate, "PIS"),
         PisCofinsCst.Parse(r.CofinsCst, "COFINS"),
         Percentage.Of(r.CofinsRate, "COFINS"),
-        TaxReformCodes.Parse(r.IbsCbsCst, r.ClassTrib));
+        TaxReformCodes.Parse(r.IbsCbsCst, r.ClassTrib, r.IbsCbsReduction));
 
     private static TaxRuleRecord ToRecord(TaxRule t) => new()
     {
@@ -57,5 +57,6 @@ public sealed class TaxRuleRepository(CatalogDbContext db) : ITaxRuleRepository
         CofinsRate = t.CofinsRate.Value,
         IbsCbsCst = t.TaxReform.IbsCbsCst,
         ClassTrib = t.TaxReform.ClassTrib,
+        IbsCbsReduction = t.TaxReform.Reduction.Value,
     };
 }

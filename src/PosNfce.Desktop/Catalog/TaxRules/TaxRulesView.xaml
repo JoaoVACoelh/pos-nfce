@@ -99,6 +99,10 @@
                         <TextBox x:Name="ClassTribBox" Text="{Binding ClassTrib}" MaxLength="6" />
                     </StackPanel>
                 </Grid>
+                <Label Content="Redução da alíquota de IBS/CBS (%)" Target="{Binding ElementName=IbsCbsReductionBox}" />
+                <TextBox x:Name="IbsCbsReductionBox" Text="{Binding IbsCbsReduction}" />
+                <TextBlock Style="{StaticResource Hint}"
+                           Text="Só para CST 200 (alíquota reduzida), por exemplo 60. Deixe 0 para tributação integral. No Simples Nacional, o IBS/CBS entra na NFC-e a partir de 2027." />
 
                 <Button Content="Salvar" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButton}"
                         HorizontalAlignment="Left" Margin="0,20,0,0" />

@@ -9,7 +9,8 @@ public interface ITaxStrategy
 {
     TaxRegime Regime { get; }
 
-    ItemTaxes Calculate(FiscalItem item, ApproximateRates? approximateRates, DateOnly issueDate);
+    /// <param name="ibsCbsRates">Rates in force on the issue date; null when none was registered.</param>
+    ItemTaxes Calculate(FiscalItem item, ApproximateRates? approximateRates, IbsCbsRates? ibsCbsRates, DateOnly issueDate);
 }
 
 /// <summary>Picks the strategy of the issuer's regime. Only Simples Nacional exists for now.</summary>
@@ -19,9 +20,10 @@ public sealed class TaxCalculator(IEnumerable<ITaxStrategy> strategies)
 
     public static TaxCalculator Default { get; } = new([new SimplesNacionalTaxStrategy()]);
 
-    public ItemTaxes Calculate(TaxRegime regime, FiscalItem item, ApproximateRates? approximateRates, DateOnly issueDate) =>
+    public ItemTaxes Calculate(
+        TaxRegime regime, FiscalItem item, ApproximateRates? approximateRates, IbsCbsRates? ibsCbsRates, DateOnly issueDate) =>
         _strategies.TryGetValue(regime, out var strategy)
-            ? strategy.Calculate(item, approximateRates, issueDate)
+            ? strategy.Calculate(item, approximateRates, ibsCbsRates, issueDate)
             : throw new DomainException($"Regime tributário {regime} ainda não tem cálculo de impostos.");
 
     /// <summary>Money rounded to cents, half away from zero, as every value of the NF-e.</summary>
@@ -35,8 +37,9 @@ public sealed class TaxCalculator(IEnumerable<ITaxStrategy> strategies)
 ///   consumer. The "ICMS efetivo" fields (rejection 906) are optional per state: not filled until SEFAZ-MG asks for them.
 ///   CSOSN 101, 201, 202, 203 and 900 need credit or ST calculations that aren't implemented: refused here.
 /// - PIS/COFINS: group chosen by the CST from the layout table; value = base × rate, both from the tax rule.
-/// - IBS/CBS: not filled. For CRT 1 they apply from 2027 (art. 348 LC 214/2025; NT 2025.002-RTC v1.40 sets production on
-///   04/01/2027, rules for CRT 1 "in a future NT"). From that date this strategy refuses to issue until it is updated.
+/// - IBS/CBS: for CRT 1 they apply from 2027 (art. 348 LC 214/2025; NT 2025.002-RTC v1.40 sets production on 04/01/2027).
+///   Before that date the group is not filled. From it, the item gets the group calculated by <see cref="IbsCbsCalculation"/>
+///   with the rates registered for the date. The specific CRT 1 rules are still to come "in a future NT": review then.
 /// - Approximate taxes (Lei 12.741/2012): net item value × (federal + state + municipal) IBPT rates.
 /// </summary>
 public sealed class SimplesNacionalTaxStrategy : ITaxStrategy
@@ -47,21 +50,26 @@ public sealed class SimplesNacionalTaxStrategy : ITaxStrategy
 
     public TaxRegime Regime => TaxRegime.SimplesNacional;
 
-    public ItemTaxes Calculate(FiscalItem item, ApproximateRates? approximateRates, DateOnly issueDate)
+    public ItemTaxes Calculate(FiscalItem item, ApproximateRates? approximateRates, IbsCbsRates? ibsCbsRates, DateOnly issueDate)
     {
+        var net = item.NetTotal;
+        var pis = PisOrCofins(item.PisCst, item.PisRate, net, "PIS");
+        var cofins = PisOrCofins(item.CofinsCst, item.CofinsRate, net, "COFINS");
+
+        IbsCbsTaxes? ibsCbs = null;
         if (issueDate >= IbsCbsStart)
         {
-            throw new DomainException(
-                "A partir de 04/01/2027 o Simples Nacional precisa do grupo IBS/CBS na NFC-e, e o cálculo ainda não foi atualizado.");
+            var rates = ibsCbsRates ?? throw new DomainException(
+                $"Cadastre as alíquotas de IBS/CBS vigentes em {issueDate:dd/MM/yyyy}: o Simples Nacional informa IBS/CBS desde 04/01/2027.");
+            ibsCbs = IbsCbsCalculation.Calculate(item, pis, cofins, rates);
         }
-
-        var net = item.NetTotal;
 
         return new ItemTaxes(
             Icms(item),
-            PisOrCofins(item.PisCst, item.PisRate, net, "PIS"),
-            PisOrCofins(item.CofinsCst, item.CofinsRate, net, "COFINS"),
-            approximateRates is null ? Money.Zero : TaxCalculator.Cents(net.Amount * approximateRates.Total / 100m));
+            pis,
+            cofins,
+            approximateRates is null ? Money.Zero : TaxCalculator.Cents(net.Amount * approximateRates.Total / 100m),
+            ibsCbs);
     }
 
     private static SimplesIcms Icms(FiscalItem item)

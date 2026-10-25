@@ -95,6 +95,9 @@ namespace PosNfce.Checkout.Adapters.Out.Persistence.Migrations
                         .HasMaxLength(3)
                         .HasColumnType("TEXT");
 
+                    b.Property<decimal>("IbsCbsReduction")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("Line")
                         .HasColumnType("INTEGER");
 

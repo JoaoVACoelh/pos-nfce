@@ -45,9 +45,9 @@ public sealed class FiscalDocumentUseCaseTests : IDisposable
         id ?? Guid.NewGuid(), DateTimeOffset.Now, Subtotal: 15.98m, Discount: 0.98m, Total: 15m, Change: 5m,
         [
             new SoldItem(1, Guid.NewGuid(), "REF", "SEM GTIN", "Refrigerante", "UN", 2m, 5.49m, 10.98m,
-                "22021000", null, 0, "5405", "500", "49", 0m, "49", 0m, "000", "000001"),
+                "22021000", null, 0, "5405", "500", "49", 0m, "49", 0m, "000", "000001", 0m),
             new SoldItem(2, Guid.NewGuid(), "PAO", "SEM GTIN", "Pão francês", "KG", 0.5m, 10m, 5m,
-                "19059090", null, 0, "5102", "102", "49", 0m, "49", 0m, "000", "000001"),
+                "19059090", null, 0, "5102", "102", "49", 0m, "49", 0m, "000", "000001", 0m),
         ],
         [new ReceivedPayment("Cash", 20m, false)]);
 

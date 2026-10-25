@@ -17,7 +17,7 @@ public sealed record RegisterSaleDocumentCommand(
 public sealed record SaleDocumentItem(
     int Line, string Code, string Gtin, string Description, string Unit, decimal Quantity, decimal UnitPrice, decimal Total,
     string Ncm, string? Cest, int Origin, string Cfop, string Csosn,
-    string PisCst, decimal PisRate, string CofinsCst, decimal CofinsRate, string IbsCbsCst, string ClassTrib);
+    string PisCst, decimal PisRate, string CofinsCst, decimal CofinsRate, string IbsCbsCst, string ClassTrib, decimal IbsCbsReduction);
 
 public sealed record SaleDocumentPayment(string Method, decimal Amount, bool Integrated);
 
@@ -39,7 +39,7 @@ public sealed class RegisterSaleDocument(IFiscalDocumentRepository documents)
             command.SoldAt,
             command.Items.Select(i => new FiscalItem(
                 i.Line, i.Code, i.Gtin, i.Description, i.Unit, i.Quantity, new Money(i.UnitPrice), new Money(i.Total), Money.Zero,
-                i.Ncm, i.Cest, i.Origin, i.Cfop, i.Csosn, i.PisCst, i.PisRate, i.CofinsCst, i.CofinsRate, i.IbsCbsCst, i.ClassTrib)).ToList(),
+                i.Ncm, i.Cest, i.Origin, i.Cfop, i.Csosn, i.PisCst, i.PisRate, i.CofinsCst, i.CofinsRate, i.IbsCbsCst, i.ClassTrib, i.IbsCbsReduction)).ToList(),
             new Money(command.Discount),
             new Money(command.Total),
             new Money(command.Change),

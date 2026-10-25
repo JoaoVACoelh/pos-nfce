@@ -9,6 +9,7 @@ using PosNfce.Fiscal.Adapters.Out.Security;
 using PosNfce.Fiscal.Application.Documents;
 using PosNfce.Fiscal.Application.Issuers;
 using PosNfce.Fiscal.Application.Ports;
+using PosNfce.Fiscal.Application.Taxes;
 using PosNfce.SharedKernel;
 
 namespace PosNfce.Fiscal.Adapters;
@@ -26,6 +27,7 @@ public static class FiscalModule
         services.AddScoped<IIssuerRepository, IssuerRepository>();
         services.AddScoped<IFiscalDocumentRepository, FiscalDocumentRepository>();
         services.AddScoped<IDocumentNumbering, SqliteDocumentNumbering>();
+        services.AddScoped<IIbsCbsRateRepository, IbsCbsRateRepository>();
         services.AddScoped<IEventHandler<SaleCompleted>, SaleCompletedHandler>();
         if (OperatingSystem.IsWindows())
         {
@@ -36,6 +38,8 @@ public static class FiscalModule
         services.AddScoped<SaveIssuer>();
         services.AddScoped<RegisterSaleDocument>();
         services.AddScoped<ListFiscalDocuments>();
+        services.AddScoped<RegisterIbsCbsRates>();
+        services.AddScoped<ListIbsCbsRates>();
 
         return services;
     }

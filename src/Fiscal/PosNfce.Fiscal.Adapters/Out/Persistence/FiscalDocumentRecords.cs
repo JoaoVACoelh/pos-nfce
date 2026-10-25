@@ -41,6 +41,7 @@ public sealed class FiscalItemRecord
     public decimal CofinsRate { get; set; }
     public string IbsCbsCst { get; set; } = "";
     public string ClassTrib { get; set; } = "";
+    public decimal IbsCbsReduction { get; set; }
 }
 
 /// <summary>Row of <c>fiscal_document_payments</c>.</summary>

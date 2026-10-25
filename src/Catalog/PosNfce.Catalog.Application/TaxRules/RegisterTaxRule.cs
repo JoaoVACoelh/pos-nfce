@@ -14,7 +14,8 @@ public sealed record RegisterTaxRuleCommand(
     string CofinsCst,
     decimal CofinsRate,
     string IbsCbsCst,
-    string ClassTrib);
+    string ClassTrib,
+    decimal IbsCbsReduction = 0m);
 
 public sealed class RegisterTaxRule(ITaxRuleRepository taxRules)
 {
@@ -28,7 +29,7 @@ public sealed class RegisterTaxRule(ITaxRuleRepository taxRules)
             Percentage.Of(command.PisRate, "PIS"),
             PisCofinsCst.Parse(command.CofinsCst, "COFINS"),
             Percentage.Of(command.CofinsRate, "COFINS"),
-            TaxReformCodes.Parse(command.IbsCbsCst, command.ClassTrib));
+            TaxReformCodes.Parse(command.IbsCbsCst, command.ClassTrib, command.IbsCbsReduction));
 
         // The name is how the operator picks the rule in the product screen, so it must be unique.
         if (await taxRules.NameExistsAsync(taxRule.Name, cancellationToken))

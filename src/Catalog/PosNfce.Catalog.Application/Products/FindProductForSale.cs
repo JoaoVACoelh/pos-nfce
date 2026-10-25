@@ -23,7 +23,8 @@ public sealed record ProductForSale(
     string CofinsCst,
     decimal CofinsRate,
     string IbsCbsCst,
-    string ClassTrib);
+    string ClassTrib,
+    decimal IbsCbsReduction);
 
 /// <summary>Used by the Checkout module (through its own port) when a product is scanned.</summary>
 public sealed class FindProductForSale(IProductRepository products, ITaxRuleRepository taxRules)
@@ -44,6 +45,6 @@ public sealed class FindProductForSale(IProductRepository products, ITaxRuleRepo
             product.Ncm.Value, product.Cest?.Value, (int)product.Origin,
             rule.Cfop.Value, rule.Csosn.Value,
             rule.PisCst.Value, rule.PisRate.Value, rule.CofinsCst.Value, rule.CofinsRate.Value,
-            rule.TaxReform.IbsCbsCst, rule.TaxReform.ClassTrib);
+            rule.TaxReform.IbsCbsCst, rule.TaxReform.ClassTrib, rule.TaxReform.Reduction.Value);
     }
 }

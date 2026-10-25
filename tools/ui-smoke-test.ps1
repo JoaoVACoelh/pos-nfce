@@ -99,6 +99,12 @@ try {
     "ibpt after: $((Find 'StatusText').Current.Name)"
     Shot "5-ibpt"
 
+    # IBS/CBS rates for 2027 (fictitious values, test database only)
+    Click (FindByName "Alíquotas IBS/CBS")
+    Fill "ValidFromBox" "01/01/2027"; Fill "IbsStateBox" "0,5"; Fill "IbsMunicipalBox" "0,5"; Fill "CbsBox" "9"; Fill "SourceBox" "TESTE"
+    Click (FindByName "Salvar")
+    "ibs/cbs rates: $(Message)"
+
     # Issuer with the development certificate (dotnet run tools/create-dev-certificate.cs), fictitious data
     $certificate = Join-Path $PSScriptRoot "..\data\dev-certificate.pfx"
     Click (FindByName "Emitente")

@@ -33,7 +33,8 @@ public sealed record FiscalItem(
     string CofinsCst,
     decimal CofinsRate,
     string IbsCbsCst,
-    string ClassTrib)
+    string ClassTrib,
+    decimal IbsCbsReduction)
 {
     public Money NetTotal => GrossTotal - Discount;
 }

@@ -14,6 +14,8 @@ public sealed class FiscalDbContext(DbContextOptions<FiscalDbContext> options) :
 
     public DbSet<FiscalDocumentRecord> Documents => Set<FiscalDocumentRecord>();
 
+    public DbSet<IbsCbsRateRecord> IbsCbsRates => Set<IbsCbsRateRecord>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<IssuerRecord>(issuer =>
@@ -64,6 +66,13 @@ public sealed class FiscalDbContext(DbContextOptions<FiscalDbContext> options) :
             item.Property(i => i.CofinsCst).HasMaxLength(2);
             item.Property(i => i.IbsCbsCst).HasMaxLength(3);
             item.Property(i => i.ClassTrib).HasMaxLength(6);
+        });
+
+        modelBuilder.Entity<IbsCbsRateRecord>(rate =>
+        {
+            rate.ToTable("fiscal_ibs_cbs_rates");
+            rate.HasKey(r => r.ValidFrom);
+            rate.Property(r => r.Source).HasMaxLength(200);
         });
 
         modelBuilder.Entity<FiscalPaymentRecord>(payment =>

@@ -8,7 +8,7 @@ public class SaleTests
     private static readonly DateTimeOffset Now = new(2026, 10, 24, 15, 0, 0, TimeSpan.FromHours(-3));
 
     /// <summary>Format-only tax values: real ones come from the accountant.</summary>
-    internal static readonly TaxSnapshot Tax = new("00000000", null, 0, "5102", "102", "49", 0, "49", 0, "000", "000001");
+    internal static readonly TaxSnapshot Tax = new("00000000", null, 0, "5102", "102", "49", 0, "49", 0, "000", "000001", 0m);
 
     private static Sale SaleWith(params (decimal price, decimal quantity)[] items)
     {

@@ -19,7 +19,7 @@ public sealed class SaleCompletedHandler(RegisterSaleDocument registerDocument) 
             sale.Change,
             sale.Items.Select(i => new SaleDocumentItem(
                 i.Line, i.Code, i.Gtin, i.Description, i.Unit, i.Quantity, i.UnitPrice, i.Total,
-                i.Ncm, i.Cest, i.Origin, i.Cfop, i.Csosn, i.PisCst, i.PisRate, i.CofinsCst, i.CofinsRate, i.IbsCbsCst, i.ClassTrib)).ToList(),
+                i.Ncm, i.Cest, i.Origin, i.Cfop, i.Csosn, i.PisCst, i.PisRate, i.CofinsCst, i.CofinsRate, i.IbsCbsCst, i.ClassTrib, i.IbsCbsReduction)).ToList(),
             sale.Payments.Select(p => new SaleDocumentPayment(p.Method, p.Amount, p.Integrated)).ToList()),
             cancellationToken);
 }

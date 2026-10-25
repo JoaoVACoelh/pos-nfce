@@ -6,7 +6,8 @@
              xmlns:issuer="clr-namespace:PosNfce.Desktop.Fiscal.Issuer"
              xmlns:ibpt="clr-namespace:PosNfce.Desktop.Catalog.Ibpt"
              xmlns:checkout="clr-namespace:PosNfce.Desktop.Checkout"
-             xmlns:documents="clr-namespace:PosNfce.Desktop.Fiscal.Documents">
+             xmlns:documents="clr-namespace:PosNfce.Desktop.Fiscal.Documents"
+             xmlns:ibscbs="clr-namespace:PosNfce.Desktop.Fiscal.IbsCbs">
     <Application.Resources>
         <!-- Colors -->
         <SolidColorBrush x:Key="PageBrush" Color="#F5F6F8" />
@@ -33,6 +34,9 @@
         </DataTemplate>
         <DataTemplate DataType="{x:Type documents:FiscalDocumentsViewModel}">
             <documents:FiscalDocumentsView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type ibscbs:IbsCbsRatesViewModel}">
+            <ibscbs:IbsCbsRatesView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type products:ProductsViewModel}">
             <products:ProductsView />

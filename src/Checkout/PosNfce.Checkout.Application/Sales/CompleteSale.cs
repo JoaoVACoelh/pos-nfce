@@ -46,6 +46,6 @@ public sealed class CompleteSale(ISaleRepository sales, IEventPublisher events, 
         sale.Items.Select(i => new SoldItem(
             i.Line, i.ProductId, i.Code, i.Gtin, i.Description, i.Unit, i.Quantity, i.UnitPrice.Amount, i.Total.Amount,
             i.Tax.Ncm, i.Tax.Cest, i.Tax.Origin, i.Tax.Cfop, i.Tax.Csosn,
-            i.Tax.PisCst, i.Tax.PisRate, i.Tax.CofinsCst, i.Tax.CofinsRate, i.Tax.IbsCbsCst, i.Tax.ClassTrib)).ToList(),
+            i.Tax.PisCst, i.Tax.PisRate, i.Tax.CofinsCst, i.Tax.CofinsRate, i.Tax.IbsCbsCst, i.Tax.ClassTrib, i.Tax.IbsCbsReduction)).ToList(),
         sale.Payments.Select(p => new ReceivedPayment(p.Method.ToString(), p.Amount.Amount, p.Integrated)).ToList());
 }

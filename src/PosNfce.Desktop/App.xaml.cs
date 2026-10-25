@@ -9,6 +9,7 @@ using PosNfce.Checkout.Adapters;
 using PosNfce.Desktop.Catalog.Ibpt;
 using PosNfce.Desktop.Checkout;
 using PosNfce.Desktop.Fiscal.Documents;
+using PosNfce.Desktop.Fiscal.IbsCbs;
 using PosNfce.Desktop.Catalog.Products;
 using PosNfce.Desktop.Catalog.TaxRules;
 using PosNfce.Desktop.Fiscal.Issuer;
@@ -53,6 +54,7 @@ public partial class App : Application
             services.AddTransient<TaxRulesViewModel>();
             services.AddTransient<IssuerViewModel>();
             services.AddTransient<IbptViewModel>();
+            services.AddTransient<IbsCbsRatesViewModel>();
         })
         .Build();
 

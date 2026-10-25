@@ -29,7 +29,7 @@ public sealed class FiscalDocumentRepository(FiscalDbContext db) : IFiscalDocume
         new Money(r.Discount), new Money(r.Change),
         r.Items.Select(i => new FiscalItem(
             i.Line, i.Code, i.Gtin, i.Description, i.Unit, i.Quantity, new Money(i.UnitPrice), new Money(i.GrossTotal), new Money(i.Discount),
-            i.Ncm, i.Cest, i.Origin, i.Cfop, i.Csosn, i.PisCst, i.PisRate, i.CofinsCst, i.CofinsRate, i.IbsCbsCst, i.ClassTrib)),
+            i.Ncm, i.Cest, i.Origin, i.Cfop, i.Csosn, i.PisCst, i.PisRate, i.CofinsCst, i.CofinsRate, i.IbsCbsCst, i.ClassTrib, i.IbsCbsReduction)),
         r.Payments.Select(p => new FiscalPayment(p.Method, new Money(p.Amount), p.Integrated)));
 
     private static FiscalDocumentRecord ToRecord(FiscalDocument d) => new()
@@ -66,6 +66,7 @@ public sealed class FiscalDocumentRepository(FiscalDbContext db) : IFiscalDocume
             CofinsRate = i.CofinsRate,
             IbsCbsCst = i.IbsCbsCst,
             ClassTrib = i.ClassTrib,
+            IbsCbsReduction = i.IbsCbsReduction,
         }).ToList(),
         Payments = d.Payments.Select(p => new FiscalPaymentRecord
         {

@@ -122,6 +122,9 @@ namespace PosNfce.Fiscal.Adapters.Out.Persistence.Migrations
                         .HasMaxLength(3)
                         .HasColumnType("TEXT");
 
+                    b.Property<decimal>("IbsCbsReduction")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("Line")
                         .HasColumnType("INTEGER");
 
@@ -184,6 +187,30 @@ namespace PosNfce.Fiscal.Adapters.Out.Persistence.Migrations
                     b.HasIndex("DocumentId");
 
                     b.ToTable("fiscal_document_payments", (string)null);
+                });
+
+            modelBuilder.Entity("PosNfce.Fiscal.Adapters.Out.Persistence.IbsCbsRateRecord", b =>
+                {
+                    b.Property<DateOnly>("ValidFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Cbs")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("IbsMunicipal")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("IbsState")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("ValidFrom");
+
+                    b.ToTable("fiscal_ibs_cbs_rates", (string)null);
                 });
 
             modelBuilder.Entity("PosNfce.Fiscal.Adapters.Out.Persistence.IssuerRecord", b =>

@@ -38,6 +38,7 @@ public sealed class SaleItemRecord
     public decimal CofinsRate { get; set; }
     public string IbsCbsCst { get; set; } = "";
     public string ClassTrib { get; set; } = "";
+    public decimal IbsCbsReduction { get; set; }
 }
 
 /// <summary>Row of <c>checkout_payments</c>.</summary>

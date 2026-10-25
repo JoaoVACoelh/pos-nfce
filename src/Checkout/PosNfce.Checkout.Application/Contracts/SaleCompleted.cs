@@ -36,7 +36,8 @@ public sealed record SoldItem(
     string CofinsCst,
     decimal CofinsRate,
     string IbsCbsCst,
-    string ClassTrib);
+    string ClassTrib,
+    decimal IbsCbsReduction);
 
 /// <summary>
 /// Method is the name of Checkout's PaymentMethod (Cash, CreditCard, DebitCard, Pix).

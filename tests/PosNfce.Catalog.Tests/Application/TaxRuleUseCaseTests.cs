@@ -38,6 +38,23 @@ public sealed class TaxRuleUseCaseTests : IDisposable
     }
 
     [Fact]
+    public async Task Ibs_cbs_reduction_is_stored_with_the_rule()
+    {
+        await NewRegister().ExecuteAsync(ProductSamples.TaxRuleCommand() with { IbsCbsCst = "200", IbsCbsReduction = 60m });
+
+        var rule = (await new TaxRuleRepository(_database.NewContext()).ListAsync()).Single();
+
+        Assert.Equal(60m, rule.TaxReform.Reduction.Value);
+    }
+
+    [Fact]
+    public async Task Ibs_cbs_reduction_above_100_percent_is_refused()
+    {
+        await Assert.ThrowsAsync<DomainException>(
+            () => NewRegister().ExecuteAsync(ProductSamples.TaxRuleCommand() with { IbsCbsReduction = 101m }));
+    }
+
+    [Fact]
     public async Task Two_rules_with_the_same_name_ignoring_case_are_not_allowed()
     {
         await NewRegister().ExecuteAsync(ProductSamples.TaxRuleCommand("Bebidas"));

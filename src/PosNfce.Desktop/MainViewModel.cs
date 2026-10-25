@@ -7,6 +7,7 @@ using PosNfce.Desktop.Checkout;
 using PosNfce.Desktop.Catalog.Products;
 using PosNfce.Desktop.Catalog.TaxRules;
 using PosNfce.Desktop.Fiscal.Documents;
+using PosNfce.Desktop.Fiscal.IbsCbs;
 using PosNfce.Desktop.Fiscal.Issuer;
 using PosNfce.SharedKernel;
 
@@ -48,6 +49,7 @@ public sealed partial class MainViewModel : ObservableObject
         new("Produtos", typeof(ProductsViewModel)),
         new("Regras tributárias", typeof(TaxRulesViewModel)),
         new("Tabela IBPT", typeof(IbptViewModel)),
+        new("Alíquotas IBS/CBS", typeof(IbsCbsRatesViewModel)),
         new("Emitente", typeof(IssuerViewModel)),
     ];
 

@@ -35,5 +35,5 @@ public sealed record ApproximateRates(decimal Federal, decimal State, decimal Mu
     public decimal Total => Federal + State + Municipal;
 }
 
-/// <summary>Everything the NFC-e needs about the taxes of one item.</summary>
-public sealed record ItemTaxes(SimplesIcms Icms, PisCofins Pis, PisCofins Cofins, Money ApproximateTax);
+/// <summary>Everything the NFC-e needs about the taxes of one item. <paramref name="IbsCbs"/> null: the group is not filled.</summary>
+public sealed record ItemTaxes(SimplesIcms Icms, PisCofins Pis, PisCofins Cofins, Money ApproximateTax, IbsCbsTaxes? IbsCbs);

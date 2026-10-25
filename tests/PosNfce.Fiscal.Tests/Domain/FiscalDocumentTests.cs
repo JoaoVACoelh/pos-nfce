@@ -76,5 +76,5 @@ public class FiscalDocumentTests
 
     internal static FiscalItem Item(int line, decimal total) => new(
         line, $"P{line}", "SEM GTIN", "Produto", "UN", 1m, new Money(total), new Money(total), Money.Zero,
-        "00000000", null, 0, "5102", "102", "49", 0m, "49", 0m, "000", "000001");
+        "00000000", null, 0, "5102", "102", "49", 0m, "49", 0m, "000", "000001", 0m);
 }
