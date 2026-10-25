@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using System.IO;
+using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using PosNfce.Catalog.Adapters;
@@ -13,11 +14,17 @@ namespace PosNfce.Desktop;
 /// </summary>
 public partial class App : Application
 {
+    /// <summary>%LOCALAPPDATA%\PosNfce: database and, later, the issued XMLs. Outside the install folder so updates keep the data.</summary>
+    private static readonly string DataFolder = Directory.CreateDirectory(
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PosNfce")).FullName;
+
+    private static readonly string ConnectionString = $"Data Source={Path.Combine(DataFolder, "pos.db")}";
+
     private readonly IHost _host = Host.CreateDefaultBuilder()
         .ConfigureServices(services =>
         {
             services
-                .AddCatalogModule()
+                .AddCatalogModule(ConnectionString)
                 .AddCheckoutModule()
                 .AddFiscalModule()
                 .AddReportsModule();
@@ -28,6 +35,7 @@ public partial class App : Application
 
     protected override async void OnStartup(StartupEventArgs e)
     {
+        await _host.Services.MigrateCatalogDatabaseAsync();
         await _host.StartAsync();
         _host.Services.GetRequiredService<MainWindow>().Show();
         base.OnStartup(e);

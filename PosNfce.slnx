@@ -17,6 +17,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/PosNfce.ArchitectureTests/PosNfce.ArchitectureTests.csproj" />
+    <Project Path="tests/PosNfce.Catalog.Tests/PosNfce.Catalog.Tests.csproj" />
     <Project Path="tests/PosNfce.SharedKernel.Tests/PosNfce.SharedKernel.Tests.csproj" />
   </Folder>
 </Solution>
