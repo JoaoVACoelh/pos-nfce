@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\PosNfce.Reports.Domain\PosNfce.Reports.Domain.csproj" />
+  </ItemGroup>
+
+</Project>
