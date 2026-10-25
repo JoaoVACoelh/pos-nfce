@@ -147,7 +147,8 @@ public sealed class Sale
         _payments.Remove(payment);
     }
 
-    public void Complete(DateTimeOffset now)
+    /// <param name="cpfRequiredFrom">Total from which the receipt must carry the customer's CPF (set by the fiscal rules).</param>
+    public void Complete(DateTimeOffset now, Money? cpfRequiredFrom = null)
     {
         EnsureOpen();
 
@@ -159,6 +160,11 @@ public sealed class Sale
         if (Remaining > Money.Zero)
         {
             throw new DomainException($"Ainda falta receber {Remaining}.");
+        }
+
+        if (CustomerCpf is null && cpfRequiredFrom is { } limit && Total >= limit)
+        {
+            throw new DomainException($"Venda de {limit} ou mais: a lei exige o CPF do cliente na nota. Informe o CPF (F10) e conclua de novo.");
         }
 
         Status = SaleStatus.Completed;

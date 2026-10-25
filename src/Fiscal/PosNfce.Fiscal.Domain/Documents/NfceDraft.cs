@@ -71,6 +71,9 @@ public sealed record NfceDraft(
             throw new DomainException("Código numérico da nota (cNF) deve ter 8 dígitos.");
         }
 
+        // The checkout asks for the CPF before closing such a sale; this keeps a document without it from being sent.
+        ConsumerIdentificationRule.Check(document.Total, document.CustomerCpf, issuer.Address.State);
+
         var items = document.Items
             .Select((item, i) => new NfceItem(
                 item, homologation && i == 0 ? HomologationDescription : item.Description, taxes[i]))

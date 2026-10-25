@@ -37,6 +37,15 @@ public sealed partial class IssuerViewModel(UseCaseRunner useCases) : FormViewMo
     /// <summary>Send each sale's NFC-e to SEFAZ when the sale closes. Only with the real certificate and CSC.</summary>
     [ObservableProperty] public partial bool AutoIssue { get; set; }
 
+    /// <summary>Series and next number are fixed once an NFC-e has taken a number.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(NumberingHint))]
+    public partial bool NumberingLocked { get; set; }
+
+    public string NumberingHint => NumberingLocked
+        ? "Bloqueado: já existem NFC-e numeradas. O próximo número avança sozinho a cada nota."
+        : "Só altere se souber o que está fazendo: números pulados precisam ser inutilizados na SEFAZ.";
+
     [ObservableProperty] public partial string CscStatus { get; set; } = "";
     [ObservableProperty] public partial string CertificateStatus { get; set; } = "";
     [ObservableProperty] public partial bool CertificateNeedsAttention { get; set; }
@@ -75,6 +84,7 @@ public sealed partial class IssuerViewModel(UseCaseRunner useCases) : FormViewMo
         NextNumber = issuer.NextNumber.ToString(Brazilian);
         CscTokenId = issuer.CscTokenId ?? "";
         AutoIssue = issuer.AutoIssue;
+        NumberingLocked = issuer.NumberingLocked;
         Csc = "";
         CscStatus = issuer.HasCsc
             ? "CSC cadastrado. Deixe o campo vazio para manter o atual."

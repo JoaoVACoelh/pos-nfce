@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using PosNfce.Checkout.Adapters.Out.Catalog;
+using PosNfce.Checkout.Adapters.Out.Fiscal;
 using PosNfce.Checkout.Adapters.Out.Payments;
 using PosNfce.Checkout.Adapters.Out.Persistence;
 using PosNfce.Checkout.Application.Ports;
@@ -20,6 +21,7 @@ public static class CheckoutModule
         services.TryAddSingleton(TimeProvider.System);
         services.AddScoped<ISaleRepository, SaleRepository>();
         services.AddScoped<IProductCatalog, CatalogProductLookup>();
+        services.AddScoped<ICustomerIdentificationPolicy, FiscalCustomerIdentificationPolicy>();
         services.AddSingleton<ICardPaymentGateway, StandaloneTerminalGateway>();
 
         services.AddScoped<GetCurrentSale>();

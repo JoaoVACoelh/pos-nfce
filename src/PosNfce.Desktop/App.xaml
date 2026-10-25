@@ -225,6 +225,70 @@
                 </Setter.Value>
             </Setter>
         </Style>
+        <!-- Item of a code list (Shared/CodeOption): code in bold, then its name. Opacity instead of a gray brush
+             keeps the name readable when the selected item turns blue. -->
+        <DataTemplate x:Key="CodeOptionTemplate">
+            <DockPanel>
+                <TextBlock DockPanel.Dock="Left" Text="{Binding Code}" FontWeight="SemiBold" MinWidth="44" Margin="0,0,8,0" />
+                <TextBlock Text="{Binding Name}" Opacity="0.7" TextTrimming="CharacterEllipsis" />
+            </DockPanel>
+        </DataTemplate>
+        <!--
+            Editable ComboBox: a text box that also offers a list. The frame lives in the ComboBox template (not in the
+            toggle) so it lights up while the text box has the focus.
+        -->
+        <Style x:Key="EditableComboBox" TargetType="ComboBox" BasedOn="{StaticResource {x:Type ComboBox}}">
+            <Setter Property="IsEditable" Value="True" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="ComboBox">
+                        <Grid>
+                            <Border x:Name="Frame" CornerRadius="6" Background="White" BorderBrush="{StaticResource InputBorderBrush}" BorderThickness="1" />
+                            <TextBox x:Name="PART_EditableTextBox" Style="{x:Null}" Background="Transparent" Margin="{TemplateBinding Padding}" VerticalAlignment="Center"
+                                     CharacterCasing="Upper" Foreground="{TemplateBinding Foreground}" FontSize="{TemplateBinding FontSize}">
+                                <TextBox.Template>
+                                    <ControlTemplate TargetType="TextBox">
+                                        <ScrollViewer x:Name="PART_ContentHost" />
+                                    </ControlTemplate>
+                                </TextBox.Template>
+                            </TextBox>
+                            <ToggleButton Width="32" HorizontalAlignment="Right" Focusable="False" Cursor="Arrow"
+                                          IsChecked="{Binding IsDropDownOpen, Mode=TwoWay, RelativeSource={RelativeSource TemplatedParent}}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border Background="Transparent">
+                                            <Path HorizontalAlignment="Center" VerticalAlignment="Center" Data="M 0 0 L 4 4 L 8 0"
+                                                  Stroke="{StaticResource MutedBrush}" StrokeThickness="1.5" />
+                                        </Border>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <Popup IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom" AllowsTransparency="True"
+                                   Focusable="False" PopupAnimation="Fade">
+                                <Border Background="White" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="8"
+                                        Margin="0,4,0,0" Padding="4" MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                                        MaxHeight="{TemplateBinding MaxDropDownHeight}">
+                                    <ScrollViewer>
+                                        <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained" />
+                                    </ScrollViewer>
+                                </Border>
+                            </Popup>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Frame" Property="BorderBrush" Value="{StaticResource InputHoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter TargetName="Frame" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsDropDownOpen" Value="True">
+                                <Setter TargetName="Frame" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
         <Style TargetType="ComboBoxItem">
             <Setter Property="Template">
                 <Setter.Value>
@@ -407,6 +471,53 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Back" Property="Background" Value="{StaticResource MenuHoverBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <!--
+            Minimize / maximize / close in the header, as on Windows 11. They live in the title bar area, so they
+            must be hit-test visible there. Tag "Hover" lights the maximize button while Windows shows Snap Layouts
+            over it: the mouse is then in the non-client area and IsMouseOver stays false.
+        -->
+        <Style x:Key="CaptionButton" TargetType="Button">
+            <Setter Property="Foreground" Value="White" />
+            <Setter Property="FontFamily" Value="Segoe MDL2 Assets" />
+            <Setter Property="FontSize" Value="10" />
+            <Setter Property="Width" Value="46" />
+            <Setter Property="Focusable" Value="False" />
+            <Setter Property="WindowChrome.IsHitTestVisibleInChrome" Value="True" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Back" Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Back" Property="Background" Value="{StaticResource MenuHoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="Tag" Value="Hover">
+                                <Setter TargetName="Back" Property="Background" Value="{StaticResource MenuHoverBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="CloseCaptionButton" TargetType="Button" BasedOn="{StaticResource CaptionButton}">
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Back" Background="Transparent">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Back" Property="Background" Value="#C42B1C" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>

@@ -31,8 +31,8 @@ public sealed partial class SettingsViewModel : ObservableObject
     public IReadOnlyList<NavigationItem> TaxSections { get; } =
     [
         new("Regras tributárias", typeof(TaxRulesViewModel)),
-        new("Tabela IBPT", typeof(IbptViewModel)),
         new("Alíquotas IBS/CBS", typeof(IbsCbsRatesViewModel)),
+        new("Tabela IBPT", typeof(IbptViewModel)),
     ];
 
     [ObservableProperty]

@@ -12,6 +12,14 @@ public sealed partial class TaxRulesViewModel(UseCaseRunner useCases) : FormView
 {
     public ObservableCollection<TaxRuleSummary> TaxRules { get; } = [];
 
+    public IReadOnlyList<CodeOption> CfopOptions => TaxCodeOptions.Cfop;
+
+    public IReadOnlyList<CodeOption> CsosnOptions => TaxCodeOptions.Csosn;
+
+    public IReadOnlyList<CodeOption> PisCofinsCstOptions => TaxCodeOptions.PisCofinsCst;
+
+    public IReadOnlyList<CodeOption> IbsCbsCstOptions => TaxCodeOptions.IbsCbsCst;
+
     [ObservableProperty]
     public partial string Name { get; set; } = "";
 

@@ -10,6 +10,9 @@ public sealed class FiscalDocumentRepository(FiscalDbContext db) : IFiscalDocume
     public Task<bool> ExistsForSaleAsync(Guid saleId, CancellationToken cancellationToken = default) =>
         db.Documents.AnyAsync(d => d.SaleId == saleId, cancellationToken);
 
+    public Task<bool> AnyNumberedAsync(CancellationToken cancellationToken = default) =>
+        db.Documents.AnyAsync(d => d.Number != null, cancellationToken);
+
     public async Task AddAsync(FiscalDocument document, CancellationToken cancellationToken = default)
     {
         db.Documents.Add(ToRecord(document));

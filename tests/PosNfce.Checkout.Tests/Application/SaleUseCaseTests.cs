@@ -49,7 +49,7 @@ public sealed class SaleUseCaseTests : IDisposable
         var view = await Pay(PaymentMethod.Cash, 20m);
         Assert.Equal(17.00m, view.Total); // 10,98 + 6,45 - 0,43
 
-        var completed = await new CompleteSale(Repository(), _events, TimeProvider.System).ExecuteAsync();
+        var completed = await new CompleteSale(Repository(), _events, TimeProvider.System, new NoIdentificationLimit()).ExecuteAsync();
 
         Assert.Equal(3.00m, completed.Change);
         var published = Assert.Single(_events.Published.OfType<SaleCompleted>());
@@ -145,7 +145,7 @@ public sealed class SaleUseCaseTests : IDisposable
         Assert.Equal("529.982.247-25", view.CustomerCpf);
         await Pay(PaymentMethod.Cash, 10m);
 
-        await new CompleteSale(Repository(), _events, TimeProvider.System).ExecuteAsync();
+        await new CompleteSale(Repository(), _events, TimeProvider.System, new NoIdentificationLimit()).ExecuteAsync();
 
         Assert.Equal("52998224725", Assert.Single(_events.Published.OfType<SaleCompleted>()).CustomerCpf);
     }
@@ -168,10 +168,49 @@ public sealed class SaleUseCaseTests : IDisposable
         await Scan("7891234567895");
         await Pay(PaymentMethod.Cash, 10m);
 
-        var completed = await new CompleteSale(Repository(), new FailingPublisher(), TimeProvider.System).ExecuteAsync();
+        var completed = await new CompleteSale(Repository(), new FailingPublisher(), TimeProvider.System, new NoIdentificationLimit()).ExecuteAsync();
 
         Assert.Contains("nota fiscal", completed.AfterSaleWarning);
         Assert.Equal(SaleView.Empty, await new GetCurrentSale(Repository()).ExecuteAsync()); // sale closed anyway
+    }
+
+    [Fact]
+    public async Task Sale_from_the_identification_limit_needs_the_cpf_before_closing()
+    {
+        await Scan("2*7891234567895"); // R$ 10,98
+        await Pay(PaymentMethod.Cash, 10.98m);
+        var complete = new CompleteSale(Repository(), _events, TimeProvider.System, new FixedIdentificationLimit(10.98m));
+
+        var error = await Assert.ThrowsAsync<DomainException>(() => complete.ExecuteAsync());
+        Assert.Contains("CPF", error.Message);
+        Assert.Empty(_events.Published);
+
+        await new IdentifySaleCustomer(Repository()).ExecuteAsync("529.982.247-25");
+        var completed = await new CompleteSale(Repository(), _events, TimeProvider.System, new FixedIdentificationLimit(10.98m)).ExecuteAsync();
+
+        Assert.Equal(10.98m, completed.Total);
+        Assert.Equal("52998224725", Assert.Single(_events.Published.OfType<SaleCompleted>()).CustomerCpf);
+    }
+
+    [Fact]
+    public async Task Sale_below_the_identification_limit_closes_without_cpf()
+    {
+        await Scan("7891234567895");
+        await Pay(PaymentMethod.Cash, 5.49m);
+
+        var completed = await new CompleteSale(Repository(), _events, TimeProvider.System, new FixedIdentificationLimit(10_000m)).ExecuteAsync();
+
+        Assert.Equal(5.49m, completed.Total);
+    }
+
+    private sealed class NoIdentificationLimit : ICustomerIdentificationPolicy
+    {
+        public Task<decimal?> CpfRequiredFromAsync(CancellationToken cancellationToken = default) => Task.FromResult<decimal?>(null);
+    }
+
+    private sealed class FixedIdentificationLimit(decimal limit) : ICustomerIdentificationPolicy
+    {
+        public Task<decimal?> CpfRequiredFromAsync(CancellationToken cancellationToken = default) => Task.FromResult<decimal?>(limit);
     }
 
     private sealed class FailingPublisher : IEventPublisher

@@ -17,6 +17,8 @@ public sealed partial class ProductsViewModel(UseCaseRunner useCases) : FormView
 
     public IReadOnlyList<OriginOption> Origins => OriginOption.All;
 
+    public IReadOnlyList<CodeOption> Units => UnitOptions.All;
+
     [ObservableProperty]
     public partial string Search { get; set; } = "";
 

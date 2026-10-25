@@ -1,4 +1,4 @@
-<UserControl x:Class="PosNfce.Desktop.Catalog.Products.ProductsView"
+﻿<UserControl x:Class="PosNfce.Desktop.Catalog.Products.ProductsView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -83,7 +83,10 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0">
                         <Label Content="Unidade *" Target="{Binding ElementName=UnitBox}" />
-                        <TextBox x:Name="UnitBox" Text="{Binding Unit}" MaxLength="6" CharacterCasing="Upper" />
+                        <!-- Suggestions with a readable name; picking one writes only the code, and any other code can be typed -->
+                        <ComboBox x:Name="UnitBox" Style="{StaticResource EditableComboBox}" ItemsSource="{Binding Units}"
+                                  ItemTemplate="{StaticResource CodeOptionTemplate}" TextSearch.TextPath="Code"
+                                  Text="{Binding Unit, UpdateSourceTrigger=PropertyChanged}" />
                     </StackPanel>
                     <StackPanel Grid.Column="2">
                         <Label Content="Preço de venda (R$) *" Target="{Binding ElementName=PriceBox}" />

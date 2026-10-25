@@ -115,15 +115,15 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0">
                         <Label Content="Série *" Target="{Binding ElementName=SeriesBox}" />
-                        <TextBox x:Name="SeriesBox" Text="{Binding Series}" MaxLength="3" />
+                        <TextBox x:Name="SeriesBox" Text="{Binding Series}" MaxLength="3" IsReadOnly="{Binding NumberingLocked}" />
                     </StackPanel>
                     <StackPanel Grid.Column="2">
                         <Label Content="Próximo número *" Target="{Binding ElementName=NextNumberBox}" />
-                        <TextBox x:Name="NextNumberBox" Text="{Binding NextNumber}" MaxLength="9" />
+                        <TextBox x:Name="NextNumberBox" Text="{Binding NextNumber}" MaxLength="9" IsReadOnly="{Binding NumberingLocked}" />
                     </StackPanel>
                 </Grid>
                 <TextBlock Style="{StaticResource Hint}"
-                           Text="Só altere se souber o que está fazendo: números pulados precisam ser inutilizados na SEFAZ." />
+                           x:Name="NumberingHintText" Text="{Binding NumberingHint}" />
 
                 <TextBlock Text="CSC (código de segurança do contribuinte)" Style="{StaticResource SectionTitle}" />
                 <Grid>

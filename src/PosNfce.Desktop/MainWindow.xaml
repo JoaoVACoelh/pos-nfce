@@ -8,20 +8,37 @@
         d:DataContext="{d:DesignInstance Type=local:MainViewModel}"
         Title="POS NFC-e" Height="600" Width="1000" MinHeight="600" MinWidth="1000"
         WindowStartupLocation="CenterScreen" WindowState="Maximized"
-        Background="{StaticResource PageBrush}">
-    <DockPanel>
+        Icon="/Assets/app.ico" Background="{StaticResource PageBrush}">
+    <!-- The header is the title bar: Windows still drags, snaps and resizes the window, the app draws it -->
+    <WindowChrome.WindowChrome>
+        <WindowChrome CaptionHeight="52" ResizeBorderThickness="6" GlassFrameThickness="0" CornerRadius="0"
+                      UseAeroCaptionButtons="False" />
+    </WindowChrome.WindowChrome>
+    <!-- Root margin set in code-behind: a maximized window spills past the screen edge by its frame width -->
+    <DockPanel x:Name="Root">
         <!-- Header -->
         <Border DockPanel.Dock="Top" Height="52" Background="{StaticResource MenuBrush}">
             <DockPanel LastChildFill="False">
                 <Button x:Name="MenuToggle" DockPanel.Dock="Left" Command="{Binding ToggleMenuCommand}"
-                        Style="{StaticResource HeaderIconButton}" Content="&#xE700;"
+                        Style="{StaticResource HeaderIconButton}" Content="&#xE700;" WindowChrome.IsHitTestVisibleInChrome="True"
                         AutomationProperties.Name="Mostrar ou esconder o menu" ToolTip="Mostrar ou esconder o menu" />
+                <Image DockPanel.Dock="Left" Source="/Assets/app-64.png" Width="24" Height="24" Margin="4,0,10,0"
+                       RenderOptions.BitmapScalingMode="HighQuality" />
                 <TextBlock DockPanel.Dock="Left" Text="POS NFC-e" Foreground="White" FontSize="18" FontWeight="SemiBold"
-                           VerticalAlignment="Center" Margin="4,0,12,0" />
+                           VerticalAlignment="Center" Margin="0,0,12,0" />
                 <Border DockPanel.Dock="Left" Background="{StaticResource WarningBrush}" CornerRadius="10" Padding="10,2"
-                        VerticalAlignment="Center" ToolTip="Ambiente de testes da SEFAZ: as notas não têm valor fiscal.">
+                        VerticalAlignment="Center" WindowChrome.IsHitTestVisibleInChrome="True"
+                        ToolTip="Ambiente de testes da SEFAZ: as notas não têm valor fiscal.">
                     <TextBlock Text="HOMOLOGAÇÃO" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource MenuBrush}" />
                 </Border>
+
+                <!-- Window buttons, Windows 11 style -->
+                <Button x:Name="CloseButton" DockPanel.Dock="Right" Style="{StaticResource CloseCaptionButton}" Content="&#xE8BB;"
+                        Click="OnClose" AutomationProperties.Name="Fechar" ToolTip="Fechar" />
+                <Button x:Name="MaximizeButton" DockPanel.Dock="Right" Style="{StaticResource CaptionButton}" Content="&#xE922;"
+                        Click="OnMaximizeOrRestore" AutomationProperties.Name="Maximizar" ToolTip="Maximizar" />
+                <Button x:Name="MinimizeButton" DockPanel.Dock="Right" Style="{StaticResource CaptionButton}" Content="&#xE921;"
+                        Click="OnMinimize" AutomationProperties.Name="Minimizar" ToolTip="Minimizar" />
 
                 <TextBlock DockPanel.Dock="Right" Text="{Binding Clock}" Foreground="#C9D1DB" FontSize="14"
                            VerticalAlignment="Center" Margin="16,0,20,0" />

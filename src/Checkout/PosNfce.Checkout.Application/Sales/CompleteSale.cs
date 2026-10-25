@@ -12,14 +12,16 @@ public sealed record CompletedSale(Guid SaleId, decimal Total, decimal Change, s
 /// Closes a fully paid sale and publishes <see cref="SaleCompleted"/>. The sale is saved first: if a handler
 /// fails, the sale stays recorded and the cashier is warned, instead of the screen breaking with money already taken.
 /// </summary>
-public sealed class CompleteSale(ISaleRepository sales, IEventPublisher events, TimeProvider clock)
+public sealed class CompleteSale(
+    ISaleRepository sales, IEventPublisher events, TimeProvider clock, ICustomerIdentificationPolicy identification)
 {
     public async Task<CompletedSale> ExecuteAsync(CancellationToken cancellationToken = default)
     {
         var sale = await OpenSale.LoadAsync(sales, cancellationToken);
         var now = BrazilTime.Now(clock);
 
-        sale.Complete(now);
+        var cpfRequiredFrom = await identification.CpfRequiredFromAsync(cancellationToken);
+        sale.Complete(now, cpfRequiredFrom is { } limit ? new Money(limit) : null);
         await sales.SaveAsync(sale, cancellationToken);
 
         string? warning = null;

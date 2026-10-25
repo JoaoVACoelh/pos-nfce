@@ -1,4 +1,4 @@
-<UserControl x:Class="PosNfce.Desktop.Catalog.TaxRules.TaxRulesView"
+﻿<UserControl x:Class="PosNfce.Desktop.Catalog.TaxRules.TaxRulesView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -46,11 +46,15 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0">
                         <Label Content="CFOP *" Target="{Binding ElementName=CfopBox}" />
-                        <TextBox x:Name="CfopBox" Text="{Binding Cfop}" MaxLength="5" />
+                        <ComboBox x:Name="CfopBox" Style="{StaticResource EditableComboBox}" ItemsSource="{Binding CfopOptions}"
+                                  ItemTemplate="{StaticResource CodeOptionTemplate}" TextSearch.TextPath="Code"
+                                  Text="{Binding Cfop, UpdateSourceTrigger=PropertyChanged}" />
                     </StackPanel>
                     <StackPanel Grid.Column="2">
                         <Label Content="CSOSN (ICMS) *" Target="{Binding ElementName=CsosnBox}" />
-                        <TextBox x:Name="CsosnBox" Text="{Binding Csosn}" MaxLength="3" />
+                        <ComboBox x:Name="CsosnBox" ItemsSource="{Binding CsosnOptions}"
+                                  ItemTemplate="{StaticResource CodeOptionTemplate}" SelectedValuePath="Code"
+                                  SelectedValue="{Binding Csosn}" />
                     </StackPanel>
                 </Grid>
 
@@ -67,7 +71,9 @@
                     </Grid.RowDefinitions>
                     <StackPanel Grid.Row="0" Grid.Column="0">
                         <Label Content="CST do PIS *" Target="{Binding ElementName=PisCstBox}" />
-                        <TextBox x:Name="PisCstBox" Text="{Binding PisCst}" MaxLength="2" />
+                        <ComboBox x:Name="PisCstBox" ItemsSource="{Binding PisCofinsCstOptions}"
+                                  ItemTemplate="{StaticResource CodeOptionTemplate}" SelectedValuePath="Code"
+                                  SelectedValue="{Binding PisCst}" />
                     </StackPanel>
                     <StackPanel Grid.Row="0" Grid.Column="2">
                         <Label Content="Alíquota do PIS (%)" Target="{Binding ElementName=PisRateBox}" />
@@ -75,7 +81,9 @@
                     </StackPanel>
                     <StackPanel Grid.Row="1" Grid.Column="0">
                         <Label Content="CST da COFINS *" Target="{Binding ElementName=CofinsCstBox}" />
-                        <TextBox x:Name="CofinsCstBox" Text="{Binding CofinsCst}" MaxLength="2" />
+                        <ComboBox x:Name="CofinsCstBox" ItemsSource="{Binding PisCofinsCstOptions}"
+                                  ItemTemplate="{StaticResource CodeOptionTemplate}" SelectedValuePath="Code"
+                                  SelectedValue="{Binding CofinsCst}" />
                     </StackPanel>
                     <StackPanel Grid.Row="1" Grid.Column="2">
                         <Label Content="Alíquota da COFINS (%)" Target="{Binding ElementName=CofinsRateBox}" />
@@ -92,7 +100,9 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0">
                         <Label Content="CST do IBS/CBS *" Target="{Binding ElementName=IbsCbsCstBox}" />
-                        <TextBox x:Name="IbsCbsCstBox" Text="{Binding IbsCbsCst}" MaxLength="3" />
+                        <ComboBox x:Name="IbsCbsCstBox" Style="{StaticResource EditableComboBox}" ItemsSource="{Binding IbsCbsCstOptions}"
+                                  ItemTemplate="{StaticResource CodeOptionTemplate}" TextSearch.TextPath="Code"
+                                  Text="{Binding IbsCbsCst, UpdateSourceTrigger=PropertyChanged}" />
                     </StackPanel>
                     <StackPanel Grid.Column="2">
                         <Label Content="Classificação tributária (cClassTrib) *" Target="{Binding ElementName=ClassTribBox}" />

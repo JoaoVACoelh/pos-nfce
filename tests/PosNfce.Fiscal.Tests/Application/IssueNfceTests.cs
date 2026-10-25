@@ -54,7 +54,7 @@ public sealed class IssueNfceTests : IDisposable
     private SaleCompletedHandler NewHandler() => Kit().Handler();
 
     private async Task SaveIssuerAsync(bool autoIssue = false) =>
-        await new SaveIssuer(Issuers(), new X509CertificateReader(), TimeProvider.System).ExecuteAsync(new SaveIssuerCommand(
+        await new SaveIssuer(Issuers(), new FiscalDocumentRepository(NewContext()), new X509CertificateReader(), TimeProvider.System).ExecuteAsync(new SaveIssuerCommand(
             "11222333000181", "0000000000000", "EMPRESA TESTE LTDA", null, "Rua A", "100", null, "Centro", "Belo Horizonte",
             "3106200", "MG", "30110000", null, 1, 1, "1", "TESTE0123456789ABCDEF",
             TestCertificates.Create("11222333000181", DateTimeOffset.Now.AddYears(1)), TestCertificates.Password, autoIssue));

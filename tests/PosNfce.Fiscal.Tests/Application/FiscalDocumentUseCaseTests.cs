@@ -52,7 +52,7 @@ public sealed class FiscalDocumentUseCaseTests : IDisposable
         [new ReceivedPayment("Cash", 20m, false)]);
 
     private async Task SaveIssuerAsync(long nextNumber) =>
-        await new SaveIssuer(new IssuerRepository(NewContext(), new DpapiSecretProtector()), new X509CertificateReader(), TimeProvider.System)
+        await new SaveIssuer(new IssuerRepository(NewContext(), new DpapiSecretProtector()), new FiscalDocumentRepository(NewContext()), new X509CertificateReader(), TimeProvider.System)
             .ExecuteAsync(new SaveIssuerCommand("11222333000181", "0000000000000", "EMPRESA TESTE", null, "Rua A", "1", null,
                 "Centro", "Belo Horizonte", "3106200", "MG", "30110000", null, 1, nextNumber, null, null, null, null));
 

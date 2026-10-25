@@ -22,11 +22,12 @@ public sealed record IssuerDetails(
     string? CscTokenId,
     bool HasCsc,
     CertificateSummary? Certificate,
-    bool AutoIssue);
+    bool AutoIssue,
+    bool NumberingLocked);
 
 public sealed record CertificateSummary(string Cnpj, string Subject, DateTimeOffset NotAfter);
 
-public sealed class GetIssuer(IIssuerRepository issuers)
+public sealed class GetIssuer(IIssuerRepository issuers, IFiscalDocumentRepository documents)
 {
     public async Task<IssuerDetails?> ExecuteAsync(CancellationToken cancellationToken = default)
     {
@@ -47,6 +48,7 @@ public sealed class GetIssuer(IIssuerRepository issuers)
             issuer.Series, issuer.NextNumber,
             issuer.Csc?.TokenId, issuer.Csc is not null,
             certificate is null ? null : new CertificateSummary(certificate.Cnpj.Formatted, certificate.Subject, certificate.NotAfter),
-            issuer.AutoIssue);
+            issuer.AutoIssue,
+            await documents.AnyNumberedAsync(cancellationToken));
     }
 }

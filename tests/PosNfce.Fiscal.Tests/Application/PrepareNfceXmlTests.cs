@@ -57,7 +57,7 @@ public sealed class PrepareNfceXmlTests : IDisposable
 
     private async Task<Guid> PendingDocumentAsync(string ibsCbsCst = "000", decimal reduction = 0m)
     {
-        await new SaveIssuer(new IssuerRepository(NewContext(), new DpapiSecretProtector()), new X509CertificateReader(), TimeProvider.System)
+        await new SaveIssuer(new IssuerRepository(NewContext(), new DpapiSecretProtector()), new FiscalDocumentRepository(NewContext()), new X509CertificateReader(), TimeProvider.System)
             .ExecuteAsync(new SaveIssuerCommand("11222333000181", "0000000000000", "EMPRESA TESTE LTDA", "Mercadinho Teste", "Rua A", "100", null,
                 "Centro", "Belo Horizonte", "3106200", "MG", "30110000", "3130000000", 1, 1, "1", "TESTE0123456789ABCDEF",
                 TestCertificates.Create("11222333000181", DateTimeOffset.Now.AddYears(1)), TestCertificates.Password));
@@ -156,7 +156,7 @@ public sealed class PrepareNfceXmlTests : IDisposable
     [Fact]
     public async Task Issuer_without_certificate_gives_a_message()
     {
-        await new SaveIssuer(new IssuerRepository(NewContext(), new DpapiSecretProtector()), new X509CertificateReader(), TimeProvider.System)
+        await new SaveIssuer(new IssuerRepository(NewContext(), new DpapiSecretProtector()), new FiscalDocumentRepository(NewContext()), new X509CertificateReader(), TimeProvider.System)
             .ExecuteAsync(new SaveIssuerCommand("11222333000181", "0000000000000", "EMPRESA TESTE", null, "Rua A", "1", null,
                 "Centro", "Belo Horizonte", "3106200", "MG", "30110000", null, 1, 1, null, null, null, null));
 

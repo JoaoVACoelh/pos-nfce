@@ -39,6 +39,16 @@ function FindByName($name) {
     throw "element '$name' not found"
 }
 function Fill($id, $text) { (Find $id).GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).SetValue($text) }
+# Closed drop-down of codes (Shared/CodeOption): items are named "<code> - <name>"
+function Pick($id, $code) {
+    $box = Find $id
+    $box.GetCurrentPattern([System.Windows.Automation.ExpandCollapsePattern]::Pattern).Expand(); Start-Sleep -Milliseconds 300
+    $items = $box.FindAll($Tree::Descendants, (New-Object $C ($A::ControlTypeProperty, [System.Windows.Automation.ControlType]::ListItem)))
+    $item = $items | Where-Object { $_.Current.Name -like "$code - *" } | Select-Object -First 1
+    if (-not $item) { throw "option $code not found in $id" }
+    $item.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Select()
+    $box.GetCurrentPattern([System.Windows.Automation.ExpandCollapsePattern]::Pattern).Collapse(); Start-Sleep -Milliseconds 200
+}
 function Click($e) { $e.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke(); Start-Sleep -Milliseconds 700 }
 function Message { (Find "MessageText").Current.Name }
 # Issuer, printer and tax screens live under "Configurações" (bottom of the side menu), as tabs
@@ -64,8 +74,8 @@ try {
     # Tax rule (fictitious values, test database only)
     Settings "Impostos" "Regras tributárias"
     Fill "NameBox" "Mercadorias em geral (TESTE)"
-    Fill "CfopBox" "5102"; Fill "CsosnBox" "102"
-    Fill "PisCstBox" "49"; Fill "CofinsCstBox" "49"
+    Fill "CfopBox" "5102"; Pick "CsosnBox" "102"
+    Pick "PisCstBox" "49"; Pick "CofinsCstBox" "49"
     Fill "IbsCbsCstBox" "000"; Fill "ClassTribBox" "000001"
     Click (FindByName "Salvar")
     "tax rule: $(Message)"
@@ -114,7 +124,7 @@ try {
     # Issuer with the development certificate (dotnet run tools/create-dev-certificate.cs), fictitious data
     $certificate = Join-Path $PSScriptRoot "..\data\dev-certificate.pfx"
     Settings "Emitente"
-    Fill "CnpjBox" "11.222.333/0001-81"; Fill "IeBox" "0012345678901"
+    Fill "CnpjBox" "11.222.333/0001-81"; Fill "IeBox" "0623079040081"
     Fill "LegalNameBox" "EMPRESA DE DESENVOLVIMENTO LTDA"; Fill "TradeNameBox" "Mercadinho Teste"
     Fill "StreetBox" "Rua A"; Fill "NumberBox" "100"; Fill "DistrictBox" "Centro"
     Fill "CityNameBox" "Belo Horizonte"; Fill "CityCodeBox" "3106200"; Fill "PostalCodeBox" "30110-000"
@@ -186,6 +196,10 @@ try {
     "danfce window: $($null -ne $danfce)"
     Shot "8c-danfce"
     Keys "{ESC}"
+
+    # Numbering is locked now that a document took a number
+    Settings "Emitente"
+    "numbering locked: $((Find 'NextNumberBox').GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).Current.IsReadOnly) / $((Find 'NumberingHintText').Current.Name)"
 
     # Printer screen: a local TCP listener plays a network ESC/POS printer and receives the test page
     $listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, 0)
