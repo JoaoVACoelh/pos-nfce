@@ -1,6 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using PosNfce.Catalog.Adapters.Out.Ibpt;
 using PosNfce.Catalog.Adapters.Out.Persistence;
+using PosNfce.Catalog.Application.Ibpt;
 using PosNfce.Catalog.Application.Ports;
 using PosNfce.Catalog.Application.Products;
 using PosNfce.Catalog.Application.TaxRules;
@@ -15,6 +18,9 @@ public static class CatalogModule
         services.AddDbContext<CatalogDbContext>(options => options.UseSqlite(connectionString));
         services.AddScoped<IProductRepository, ProductRepository>();
         services.AddScoped<ITaxRuleRepository, TaxRuleRepository>();
+        services.AddScoped<IIbptRateRepository, IbptRateRepository>();
+        services.AddSingleton<IIbptFileReader, IbptCsvReader>();
+        services.TryAddSingleton(TimeProvider.System);
 
         services.AddScoped<RegisterProduct>();
         services.AddScoped<FindProductByBarcode>();
@@ -23,6 +29,9 @@ public static class CatalogModule
         services.AddScoped<SetProductActive>();
         services.AddScoped<RegisterTaxRule>();
         services.AddScoped<ListTaxRules>();
+        services.AddScoped<ImportIbptTable>();
+        services.AddScoped<GetIbptStatus>();
+        services.AddScoped<FindIbptRate>();
 
         return services;
     }

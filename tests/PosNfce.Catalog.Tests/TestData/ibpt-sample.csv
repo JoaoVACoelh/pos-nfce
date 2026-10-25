@@ -1,0 +1,7 @@
+codigo;ex;tipo;descricao;nacionalfederal;importadosfederal;estadual;municipal;vigenciainicio;vigenciafim;chave;versao;fonte
+22021000;;0;Aguas, incluindo as aguas minerais, adicionadas de acucar (VALORES FICTICIOS DE TESTE);13.45;15.45;18.00;0.00;01/10/2026;31/12/2026;TESTE1;26.2.A-TESTE;IBPT (arquivo de teste)
+19052090;;0;Paes de forma, outros produtos de padaria (VALORES FICTICIOS DE TESTE);7.85;9.85;12.00;0.00;01/10/2026;31/12/2026;TESTE1;26.2.A-TESTE;IBPT (arquivo de teste)
+"04069010";;0;"Queijo ""minas"" frescal; peca (VALORES FICTICIOS DE TESTE)";4.20;12.30;7.00;0.00;01/10/2026;31/12/2026;TESTE1;26.2.A-TESTE;IBPT (arquivo de teste)
+22021000;01;0;Refrigerantes, excecao 01 (VALORES FICTICIOS DE TESTE);20.00;22.00;18.00;0.00;01/10/2026;31/12/2026;TESTE1;26.2.A-TESTE;IBPT (arquivo de teste)
+0107;;1;Servico NBS de exemplo (deve ser ignorado);13.45;15.45;0.00;2.00;01/10/2026;31/12/2026;TESTE1;26.2.A-TESTE;IBPT (arquivo de teste)
+1401;;2;Servico LC116 de exemplo (deve ser ignorado);13.45;15.45;0.00;5.00;01/10/2026;31/12/2026;TESTE1;26.2.A-TESTE;IBPT (arquivo de teste)

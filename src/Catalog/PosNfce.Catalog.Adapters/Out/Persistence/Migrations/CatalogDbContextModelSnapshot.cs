@@ -17,6 +17,62 @@ namespace PosNfce.Catalog.Adapters.Out.Persistence.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.13");
 
+            modelBuilder.Entity("PosNfce.Catalog.Adapters.Out.Persistence.IbptRateRecord", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Ex")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("FederalImported")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("FederalNational")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Municipal")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Ncm")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("State")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("ValidFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("ValidUntil")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Version")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Ncm", "Ex")
+                        .IsUnique();
+
+                    b.ToTable("catalog_ibpt_rates", (string)null);
+                });
+
             modelBuilder.Entity("PosNfce.Catalog.Adapters.Out.Persistence.ProductRecord", b =>
                 {
                     b.Property<Guid>("Id")

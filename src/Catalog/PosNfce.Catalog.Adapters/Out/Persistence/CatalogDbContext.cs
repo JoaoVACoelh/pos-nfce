@@ -10,8 +10,21 @@ public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options)
 
     public DbSet<TaxRuleRecord> TaxRules => Set<TaxRuleRecord>();
 
+    public DbSet<IbptRateRecord> IbptRates => Set<IbptRateRecord>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<IbptRateRecord>(rate =>
+        {
+            rate.ToTable("catalog_ibpt_rates");
+            rate.HasKey(r => r.Id);
+            rate.Property(r => r.Ncm).HasMaxLength(8);
+            rate.Property(r => r.Ex).HasMaxLength(3);
+            rate.Property(r => r.Version).HasMaxLength(20);
+            rate.Property(r => r.Source).HasMaxLength(100);
+            rate.HasIndex(r => new { r.Ncm, r.Ex }).IsUnique();
+        });
+
         modelBuilder.Entity<TaxRuleRecord>(taxRule =>
         {
             taxRule.ToTable("catalog_tax_rules");
