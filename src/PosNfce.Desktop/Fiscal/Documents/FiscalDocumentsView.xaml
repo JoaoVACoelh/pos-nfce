@@ -10,6 +10,8 @@
     <DockPanel Margin="24">
         <DockPanel DockPanel.Dock="Top">
             <Button DockPanel.Dock="Right" Content="Atualizar" Command="{Binding LoadCommand}" VerticalAlignment="Top" />
+            <Button x:Name="DanfceButton" DockPanel.Dock="Right" Content="Ver DANFCE" Command="{Binding ShowDanfceCommand}"
+                    VerticalAlignment="Top" Margin="0,0,8,0" ToolTip="Mostra e imprime o cupom da nota selecionada." />
             <Button x:Name="IssueButton" DockPanel.Dock="Right" Content="Emitir (enviar à SEFAZ)" Command="{Binding IssueCommand}"
                     Style="{StaticResource PrimaryButton}" VerticalAlignment="Top" Margin="0,0,8,0"
                     ToolTip="Assina e envia a nota selecionada para a SEFAZ (homologação)." />

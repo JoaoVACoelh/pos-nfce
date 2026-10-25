@@ -136,7 +136,9 @@ try {
     function Keys($keys) { [System.Windows.Forms.SendKeys]::SendWait($keys); Start-Sleep -Milliseconds 600 }
     Keys "999{ENTER}"                   # unknown code: warning, screen keeps working
     "checkout unknown: $(Message)"
-    Keys "2*7891234567895{ENTER}"       # 2 x R$ 5,49 = R$ 10,98
+    Keys "{F11}"; Keys "2{ENTER}"        # quantity field, then back to the code field
+    Keys "7891234567895{ENTER}"         # 2 x R$ 5,49 = R$ 10,98
+    "checkout quantity after item: $((Find 'QuantityBox').GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).Current.Value)"
     Keys "{F3}"; Keys "0,98{ENTER}"     # discount -> R$ 10,00
     "checkout total: $((Find 'TotalText').Current.Name)"
     Keys "{F10}"; Keys "52998224725{ENTER}"  # CPF na nota (fictitious, valid check digits)
@@ -171,6 +173,13 @@ try {
     Start-Sleep -Seconds 2
     "signed xml: $(Message)"
     Shot "8b-fiscal-documents"
+    # DANFCE preview of the signed document (modal window; Esc closes it)
+    Click (Find "DanfceButton")
+    Start-Sleep -Seconds 1
+    $danfce = [System.Windows.Automation.AutomationElement]::RootElement.FindFirst($Tree::Descendants, (New-Object $C ($A::NameProperty, "DANFCE")))
+    "danfce window: $($null -ne $danfce)"
+    Shot "8c-danfce"
+    Keys "{ESC}"
     Click (FindByName "Caixa")
 
     # Hamburger slides the side menu closed and open (animated: the items stay in the tree, but off screen)

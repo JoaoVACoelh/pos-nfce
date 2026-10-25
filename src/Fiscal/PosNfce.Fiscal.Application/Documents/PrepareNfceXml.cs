@@ -58,7 +58,7 @@ public sealed class PrepareNfceXml(
         var signed = issuer.Sign(draft, certificate, csc);
         var path = await xmlStore.SaveSignedAsync(signed.AccessKey, issuedAt, signed.Xml, cancellationToken);
 
-        document.RecordSignature(signed.AccessKey);
+        document.RecordSignature(signed.AccessKey, signed.QrCode, signed.ConsultUrl, draft.AdditionalInfo);
         await documents.UpdateAsync(document, cancellationToken);
 
         return new PreparedNfce(document.Series!.Value, document.Number.Value, signed.AccessKey, path, issuedAt, signed);

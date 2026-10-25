@@ -34,7 +34,10 @@ public sealed class FiscalDocumentRepository(FiscalDbContext db) : IFiscalDocume
             .SetProperty(d => d.Protocol, document.Protocol)
             .SetProperty(d => d.AuthorizedAt, document.AuthorizedAt)
             .SetProperty(d => d.LastStatusCode, document.LastStatusCode)
-            .SetProperty(d => d.LastMessage, document.LastMessage), cancellationToken);
+            .SetProperty(d => d.LastMessage, document.LastMessage)
+            .SetProperty(d => d.QrCode, document.QrCode)
+            .SetProperty(d => d.ConsultUrl, document.ConsultUrl)
+            .SetProperty(d => d.AdditionalInfo, document.AdditionalInfo), cancellationToken);
     }
 
     public async Task<IReadOnlyList<FiscalDocument>> ListRecentAsync(int limit, CancellationToken cancellationToken = default)
@@ -51,7 +54,7 @@ public sealed class FiscalDocumentRepository(FiscalDbContext db) : IFiscalDocume
             i.Line, i.Code, i.Gtin, i.Description, i.Unit, i.Quantity, new Money(i.UnitPrice), new Money(i.GrossTotal), new Money(i.Discount),
             i.Ncm, i.Cest, i.Origin, i.Cfop, i.Csosn, i.PisCst, i.PisRate, i.CofinsCst, i.CofinsRate, i.IbsCbsCst, i.ClassTrib, i.IbsCbsReduction)),
         r.Payments.Select(p => new FiscalPayment(p.Method, new Money(p.Amount), p.Integrated)),
-        r.AccessKey, r.CustomerCpf, r.Protocol, r.AuthorizedAt, r.LastStatusCode, r.LastMessage);
+        r.AccessKey, r.CustomerCpf, r.Protocol, r.AuthorizedAt, r.LastStatusCode, r.LastMessage, r.QrCode, r.ConsultUrl, r.AdditionalInfo);
 
     private static FiscalDocumentRecord ToRecord(FiscalDocument d) => new()
     {
@@ -67,6 +70,9 @@ public sealed class FiscalDocumentRepository(FiscalDbContext db) : IFiscalDocume
         AuthorizedAt = d.AuthorizedAt,
         LastStatusCode = d.LastStatusCode,
         LastMessage = d.LastMessage,
+        QrCode = d.QrCode,
+        ConsultUrl = d.ConsultUrl,
+        AdditionalInfo = d.AdditionalInfo,
         Discount = d.Discount.Amount,
         Total = d.Total.Amount,
         Change = d.Change.Amount,

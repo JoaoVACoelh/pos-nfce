@@ -15,6 +15,9 @@ public sealed class FiscalDocumentRecord
     public DateTimeOffset? AuthorizedAt { get; set; }
     public int? LastStatusCode { get; set; }
     public string? LastMessage { get; set; }
+    public string? QrCode { get; set; }
+    public string? ConsultUrl { get; set; }
+    public string? AdditionalInfo { get; set; }
     public decimal Discount { get; set; }
     public decimal Total { get; set; }
     public decimal Change { get; set; }

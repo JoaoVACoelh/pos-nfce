@@ -20,7 +20,8 @@ public interface IFiscalDocumentIssuer
         CancellationToken cancellationToken = default);
 }
 
-public sealed record SignedNfce(string AccessKey, string Xml, string QrCode);
+/// <summary><paramref name="ConsultUrl"/>: where the consumer looks the document up by its key (<c>urlChave</c>).</summary>
+public sealed record SignedNfce(string AccessKey, string Xml, string QrCode, string ConsultUrl = "");
 
 public enum SefazOutcome
 {

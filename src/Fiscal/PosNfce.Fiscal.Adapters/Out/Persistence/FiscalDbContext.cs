@@ -48,6 +48,9 @@ public sealed class FiscalDbContext(DbContextOptions<FiscalDbContext> options) :
             document.Property(d => d.CustomerCpf).HasMaxLength(11);
             document.Property(d => d.Protocol).HasMaxLength(20);
             document.Property(d => d.LastMessage).HasMaxLength(500);
+            document.Property(d => d.QrCode).HasMaxLength(600);
+            document.Property(d => d.ConsultUrl).HasMaxLength(200);
+            document.Property(d => d.AdditionalInfo).HasMaxLength(5000);
             document.HasIndex(d => d.Status);
             // Two documents can never share a number; NULL (not numbered yet) is allowed many times.
             document.HasIndex(d => new { d.Series, d.Number }).IsUnique();

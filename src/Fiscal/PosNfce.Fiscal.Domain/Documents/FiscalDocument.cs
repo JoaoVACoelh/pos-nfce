@@ -61,6 +61,11 @@ public sealed class FiscalDocument
     /// <summary>44-digit access key, known once the XML is signed.</summary>
     public string? AccessKey { get; private set; }
 
+    /// <summary>QR Code content, consultation URL and consumer text of the signed XML: the DANFCE prints them as they are.</summary>
+    public string? QrCode { get; private set; }
+    public string? ConsultUrl { get; private set; }
+    public string? AdditionalInfo { get; private set; }
+
     /// <summary>Customer's CPF (digits), when the cashier typed it ("CPF na nota").</summary>
     public string? CustomerCpf { get; private init; }
 
@@ -137,7 +142,7 @@ public sealed class FiscalDocument
         Guid id, Guid saleId, DateTimeOffset soldAt, FiscalDocumentStatus status, int? series, long? number,
         Money discount, Money change, IEnumerable<FiscalItem> items, IEnumerable<FiscalPayment> payments, string? accessKey = null,
         string? customerCpf = null, string? protocol = null, DateTimeOffset? authorizedAt = null, int? lastStatusCode = null,
-        string? lastMessage = null) =>
+        string? lastMessage = null, string? qrCode = null, string? consultUrl = null, string? additionalInfo = null) =>
         new(id, saleId, soldAt, status, series, number, discount, change, items, payments)
         {
             AccessKey = accessKey,
@@ -146,6 +151,9 @@ public sealed class FiscalDocument
             AuthorizedAt = authorizedAt,
             LastStatusCode = lastStatusCode,
             LastMessage = lastMessage,
+            QrCode = qrCode,
+            ConsultUrl = consultUrl,
+            AdditionalInfo = additionalInfo,
         };
 
     /// <summary>Sets the series and number reserved for this document. Happens once, right before issuing.</summary>
@@ -165,7 +173,7 @@ public sealed class FiscalDocument
     }
 
     /// <summary>Records the access key of the signed XML. The document stays pending until SEFAZ answers.</summary>
-    public void RecordSignature(string accessKey)
+    public void RecordSignature(string accessKey, string qrCode = "", string consultUrl = "", string additionalInfo = "")
     {
         if (accessKey.Length != 44 || !accessKey.All(char.IsAsciiDigit))
         {
@@ -178,7 +186,7 @@ public sealed class FiscalDocument
         }
 
         // A rejected document is corrected and signed again with the same number: it goes back to pending.
-        AccessKey = accessKey;
+        (AccessKey, QrCode, ConsultUrl, AdditionalInfo) = (accessKey, qrCode, consultUrl, additionalInfo);
         Status = FiscalDocumentStatus.Pending;
     }
 

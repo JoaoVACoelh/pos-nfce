@@ -27,10 +27,18 @@ namespace PosNfce.Fiscal.Adapters.Out.Persistence.Migrations
                         .HasMaxLength(44)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("AdditionalInfo")
+                        .HasMaxLength(5000)
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTimeOffset?>("AuthorizedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<decimal>("Change")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ConsultUrl")
+                        .HasMaxLength(200)
                         .HasColumnType("TEXT");
 
                     b.Property<string>("CustomerCpf")
@@ -52,6 +60,10 @@ namespace PosNfce.Fiscal.Adapters.Out.Persistence.Migrations
 
                     b.Property<string>("Protocol")
                         .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("QrCode")
+                        .HasMaxLength(600)
                         .HasColumnType("TEXT");
 
                     b.Property<Guid>("SaleId")

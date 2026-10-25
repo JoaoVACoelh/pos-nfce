@@ -18,12 +18,15 @@ public sealed record FiscalDocumentRow(
 /// </summary>
 public sealed partial class FiscalDocumentsViewModel(UseCaseRunner useCases) : FormViewModel
 {
+    /// <summary>The view opens the preview window: windows are a view concern.</summary>
+    public event Action<Danfce>? ShowDanfceRequested;
+
     public ObservableCollection<FiscalDocumentRow> Documents { get; } = [];
 
     [ObservableProperty] public partial string Summary { get; set; } = "";
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(PrepareXmlCommand), nameof(IssueCommand))]
+    [NotifyCanExecuteChangedFor(nameof(PrepareXmlCommand), nameof(IssueCommand), nameof(ShowDanfceCommand))]
     public partial FiscalDocumentRow? SelectedDocument { get; set; }
 
     [RelayCommand]
@@ -81,6 +84,21 @@ public sealed partial class FiscalDocumentsViewModel(UseCaseRunner useCases) : F
             {
                 ShowError(result.Message);
             }
+        }
+        catch (DomainException error)
+        {
+            ShowError(error.Message);
+        }
+    }
+
+    /// <summary>Opens the DANFCE of the selected document (signed or authorized).</summary>
+    [RelayCommand(CanExecute = nameof(HasSelection))]
+    private async Task ShowDanfceAsync()
+    {
+        var id = SelectedDocument!.Id;
+        try
+        {
+            ShowDanfceRequested?.Invoke(await useCases.RunAsync<GetDanfce, Danfce>(u => u.ExecuteAsync(id)));
         }
         catch (DomainException error)
         {

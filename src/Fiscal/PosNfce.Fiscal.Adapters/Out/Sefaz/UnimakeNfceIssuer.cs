@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
+using System.Xml;
 using PosNfce.Fiscal.Application.Ports;
 using PosNfce.Fiscal.Domain.Documents;
 using PosNfce.Fiscal.Domain.Issuers;
@@ -20,6 +21,7 @@ namespace PosNfce.Fiscal.Adapters.Out.Sefaz;
 public sealed class UnimakeNfceIssuer : IFiscalDocumentIssuer
 {
     private const int Brazil = 1058;
+    private const string NfeNamespace = "http://www.portalfiscal.inf.br/nfe";
 
     /// <summary>
     /// Waiting longer than this for SEFAZ holds up the cashier; Stage 4 issues in contingency after a timeout.
@@ -46,7 +48,11 @@ public sealed class UnimakeNfceIssuer : IFiscalDocumentIssuer
         {
             // The constructor builds, signs and validates against the embedded schema; Executar() would send it.
             var service = new NFCe.Autorizacao(batch, configuration);
-            return new SignedNfce(nfe.InfNFeField.Chave, service.ConteudoXMLAssinado.OuterXml, nfe.InfNFeSupl?.QrCode ?? "");
+            var signedXml = service.ConteudoXMLAssinado;
+
+            // Unimake fills infNFeSupl in its own copy of the document, not in ours: read it from the signed XML.
+            return new SignedNfce(
+                nfe.InfNFeField.Chave, signedXml.OuterXml, Supplement(signedXml, "qrCode"), Supplement(signedXml, "urlChave"));
         }
         catch (Exception error) when (error is not DomainException and not CryptographicException)
         {
@@ -94,6 +100,9 @@ public sealed class UnimakeNfceIssuer : IFiscalDocumentIssuer
             return new SefazAnswer(SefazOutcome.NotSent, null, error.GetBaseException().Message, null, null, null);
         }
     }
+
+    private static string Supplement(XmlDocument xml, string tag) =>
+        xml.GetElementsByTagName(tag, NfeNamespace) is { Count: > 0 } nodes ? nodes[0]!.InnerText.Trim() : "";
 
     private static Configuracao Configuration(X509Certificate2 certificate, TipoAmbiente environment, UFBrasil state) => new()
     {
