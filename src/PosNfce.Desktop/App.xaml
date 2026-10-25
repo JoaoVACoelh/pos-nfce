@@ -4,7 +4,8 @@
              xmlns:products="clr-namespace:PosNfce.Desktop.Catalog.Products"
              xmlns:taxRules="clr-namespace:PosNfce.Desktop.Catalog.TaxRules"
              xmlns:issuer="clr-namespace:PosNfce.Desktop.Fiscal.Issuer"
-             xmlns:ibpt="clr-namespace:PosNfce.Desktop.Catalog.Ibpt">
+             xmlns:ibpt="clr-namespace:PosNfce.Desktop.Catalog.Ibpt"
+             xmlns:checkout="clr-namespace:PosNfce.Desktop.Checkout">
     <Application.Resources>
         <!-- Colors -->
         <SolidColorBrush x:Key="PageBrush" Color="#F5F6F8" />
@@ -21,6 +22,9 @@
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
 
         <!-- Each page ViewModel is shown with its View -->
+        <DataTemplate DataType="{x:Type checkout:CheckoutViewModel}">
+            <checkout:CheckoutView />
+        </DataTemplate>
         <DataTemplate DataType="{x:Type products:ProductsViewModel}">
             <products:ProductsView />
         </DataTemplate>

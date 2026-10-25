@@ -50,7 +50,7 @@ function Shot($name) {
 try {
     $script:win = Wait-Window
     Start-Sleep -Seconds 2
-    Shot "1-products-empty"
+    Shot "1-checkout-empty"
 
     # Tax rule (fictitious values, test database only)
     Click (FindByName "Regras tributárias")
@@ -120,6 +120,24 @@ try {
     Click (FindByName "Emitente")
     "reloaded trade name: $((Find 'TradeNameBox').GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).Current.Value)"
     "reloaded csc field: '$((Find 'CscBox').GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).Current.Value)'"
+
+    # Checkout with the keyboard only (the scanner is a keyboard that types the code and Enter)
+    Click (FindByName "Caixa")
+    (Find "ScanBox").SetFocus()
+    function Keys($keys) { [System.Windows.Forms.SendKeys]::SendWait($keys); Start-Sleep -Milliseconds 600 }
+    Keys "999{ENTER}"                   # unknown code: warning, screen keeps working
+    "checkout unknown: $(Message)"
+    Keys "2*7891234567895{ENTER}"       # 2 x R$ 5,49 = R$ 10,98
+    Keys "{F3}"; Keys "0,98{ENTER}"     # discount -> R$ 10,00
+    "checkout total: $((Find 'TotalText').Current.Name)"
+    Keys "{F2}"                         # payment panel, amount prefilled with what is left
+    Keys "{F7}"; Keys "4{ENTER}"        # R$ 4,00 on the debit card terminal
+    Keys "{F5}"; Keys "10{ENTER}"       # R$ 10,00 in cash
+    "checkout remaining: $((Find 'RemainingText').Current.Name) / $(Message)"
+    Shot "7-checkout-paid"
+    Keys "{ENTER}"                      # close the sale
+    "checkout result: $((Find 'LastSaleText').Current.Name)"
+    Shot "8-checkout-done"
 }
 finally {
     Stop-Process $proc.Id -Force -ErrorAction SilentlyContinue
