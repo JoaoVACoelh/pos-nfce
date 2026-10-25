@@ -15,10 +15,12 @@
     <Project Path="src/Reports/PosNfce.Reports.Domain/PosNfce.Reports.Domain.csproj" />
     <Project Path="src/PosNfce.SharedKernel/PosNfce.SharedKernel.csproj" />
   </Folder>
+  <Folder Name="/src/Checkout/" />
   <Folder Name="/src/Fiscal/" />
   <Folder Name="/tests/">
     <Project Path="tests/PosNfce.ArchitectureTests/PosNfce.ArchitectureTests.csproj" />
     <Project Path="tests/PosNfce.Catalog.Tests/PosNfce.Catalog.Tests.csproj" />
+    <Project Path="tests/PosNfce.Checkout.Tests/PosNfce.Checkout.Tests.csproj" />
     <Project Path="tests/PosNfce.Fiscal.Tests/PosNfce.Fiscal.Tests.csproj" />
     <Project Path="tests/PosNfce.SharedKernel.Tests/PosNfce.SharedKernel.Tests.csproj" />
   </Folder>
