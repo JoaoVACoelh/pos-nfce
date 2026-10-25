@@ -1,28 +1,25 @@
 # Secrets: never commit
-.env
-.env.*
-!.env.example
 *.pfx
 *.p12
+appsettings.*.local.json
 ROADMAP.md
 CLAUDE.md
 
-# Dependencies (installed inside the container)
-/vendor/
-/node_modules/
+# Build output
+bin/
+obj/
+artifacts/
+TestResults/
+*.user
 
-# Laravel runtime files
-/storage/*.key
-/storage/logs/*
-/storage/framework/cache/*
-/storage/framework/sessions/*
-/storage/framework/views/*
-/storage/xml/
-/public/storage
-/public/hot
-/public/build
+# Local data: SQLite database and issued fiscal XMLs (kept by the backup, not by Git)
+*.db
+*.db-shm
+*.db-wal
+/data/
 
 # Editors and OS
+.vs/
 .idea/
 .vscode/
 *.swp
