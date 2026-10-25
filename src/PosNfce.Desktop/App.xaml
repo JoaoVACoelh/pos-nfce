@@ -8,7 +8,8 @@
              xmlns:checkout="clr-namespace:PosNfce.Desktop.Checkout"
              xmlns:documents="clr-namespace:PosNfce.Desktop.Fiscal.Documents"
              xmlns:ibscbs="clr-namespace:PosNfce.Desktop.Fiscal.IbsCbs"
-             xmlns:printer="clr-namespace:PosNfce.Desktop.Fiscal.Printer">
+             xmlns:printer="clr-namespace:PosNfce.Desktop.Fiscal.Printer"
+             xmlns:settings="clr-namespace:PosNfce.Desktop.Settings">
     <Application.Resources>
         <!-- Colors -->
         <SolidColorBrush x:Key="PageBrush" Color="#F5F6F8" />
@@ -47,6 +48,9 @@
         </DataTemplate>
         <DataTemplate DataType="{x:Type issuer:IssuerViewModel}">
             <issuer:IssuerView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type settings:SettingsViewModel}">
+            <settings:SettingsView />
         </DataTemplate>
         <DataTemplate DataType="{x:Type printer:PrinterViewModel}">
             <printer:PrinterView />
@@ -324,6 +328,61 @@
                                 <Setter TargetName="Back" Property="Background" Value="{StaticResource MenuSelectedBrush}" />
                                 <Setter Property="Foreground" Value="White" />
                                 <Setter Property="FontWeight" Value="SemiBold" />
+                            </DataTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <!-- Settings tabs: accent underline on the open one -->
+        <Style x:Key="TabButton" TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Back" Background="Transparent" BorderBrush="Transparent" BorderThickness="0,0,0,3"
+                                CornerRadius="6,6,0,0" Padding="14,8">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Back" Property="Background" Value="{StaticResource AccentSoftBrush}" />
+                                <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+                            </Trigger>
+                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                <Setter TargetName="Back" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                <Setter Property="Foreground" Value="{StaticResource AccentBrush}" />
+                                <Setter Property="FontWeight" Value="SemiBold" />
+                            </DataTrigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <!-- Second row of tabs (under "Impostos"): rounded pills -->
+        <Style x:Key="SubTabButton" TargetType="Button">
+            <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Back" Background="White" BorderBrush="{StaticResource InputBorderBrush}" BorderThickness="1"
+                                CornerRadius="16" Padding="14,6">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Back" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                            </Trigger>
+                            <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                                <Setter TargetName="Back" Property="Background" Value="{StaticResource AccentBrush}" />
+                                <Setter TargetName="Back" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                                <Setter Property="Foreground" Value="White" />
                             </DataTrigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>

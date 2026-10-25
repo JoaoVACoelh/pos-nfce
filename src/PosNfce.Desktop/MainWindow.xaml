@@ -61,7 +61,20 @@
                 </Style>
             </Border.Style>
             <!-- Fixed width inside, so the items slide out of view instead of wrapping while the menu narrows -->
-            <ItemsControl ItemsSource="{Binding Menu}" Margin="0,12,0,0" Width="200" HorizontalAlignment="Right">
+            <DockPanel Width="200" HorizontalAlignment="Right">
+            <!-- Settings pinned to the bottom, apart from the daily screens -->
+            <Border DockPanel.Dock="Bottom" BorderBrush="{StaticResource MenuHoverBrush}" BorderThickness="0,1,0,0" Padding="0,8">
+                <Button x:Name="SettingsButton" DataContext="{Binding SettingsItem}" Style="{StaticResource MenuButton}"
+                        AutomationProperties.Name="Configurações"
+                        Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                        CommandParameter="{Binding}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" VerticalAlignment="Center" Margin="0,0,10,0" />
+                        <TextBlock Text="{Binding Title}" />
+                    </StackPanel>
+                </Button>
+            </Border>
+            <ItemsControl ItemsSource="{Binding Menu}" Margin="0,12,0,0">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
                         <Button Content="{Binding Title}" Style="{StaticResource MenuButton}"
@@ -70,6 +83,7 @@
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
+            </DockPanel>
         </Border>
 
         <!-- Current page: App.xaml maps each ViewModel to its View -->

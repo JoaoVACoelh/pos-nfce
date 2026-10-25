@@ -1,0 +1,49 @@
+<UserControl x:Class="PosNfce.Desktop.Settings.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:local="clr-namespace:PosNfce.Desktop.Settings"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=local:SettingsViewModel}">
+    <DockPanel>
+        <!-- Tabs: the store, the printer and the tax tables -->
+        <Border DockPanel.Dock="Top" Background="White" BorderBrush="{StaticResource LineBrush}" BorderThickness="0,0,0,1">
+            <StackPanel Margin="24,12,24,0">
+                <TextBlock Text="Configurações" Style="{StaticResource PageTitle}" Margin="0,0,0,8" />
+                <ItemsControl ItemsSource="{Binding Sections}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Button Content="{Binding Title}" Style="{StaticResource TabButton}"
+                                    Command="{Binding DataContext.OpenCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                    CommandParameter="{Binding}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+        <ItemsControl DockPanel.Dock="Top" ItemsSource="{Binding TaxSections}" Margin="24,16,24,0"
+                      Visibility="{Binding ShowTaxSections, Converter={StaticResource BoolToVisibility}}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <StackPanel Orientation="Horizontal" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Button Content="{Binding Title}" Style="{StaticResource SubTabButton}"
+                            Command="{Binding DataContext.OpenTaxCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            CommandParameter="{Binding}" />
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+
+        <!-- App.xaml maps each ViewModel to its View -->
+        <ContentControl Content="{Binding CurrentPage}" Focusable="False" />
+    </DockPanel>
+</UserControl>

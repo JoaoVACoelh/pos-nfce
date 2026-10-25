@@ -41,6 +41,12 @@ function FindByName($name) {
 function Fill($id, $text) { (Find $id).GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).SetValue($text) }
 function Click($e) { $e.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke(); Start-Sleep -Milliseconds 700 }
 function Message { (Find "MessageText").Current.Name }
+# Issuer, printer and tax screens live under "Configurações" (bottom of the side menu), as tabs
+function Settings($tab, $sub) {
+    Click (Find "SettingsButton")
+    Click (FindByName $tab)
+    if ($sub) { Click (FindByName $sub) }
+}
 function Shot($name) {
     $r = $script:win.Current.BoundingRectangle
     $bmp = New-Object System.Drawing.Bitmap ([int]$r.Width), ([int]$r.Height)
@@ -56,7 +62,7 @@ try {
     Shot "1-checkout-empty"
 
     # Tax rule (fictitious values, test database only)
-    Click (FindByName "Regras tributárias")
+    Settings "Impostos" "Regras tributárias"
     Fill "NameBox" "Mercadorias em geral (TESTE)"
     Fill "CfopBox" "5102"; Fill "CsosnBox" "102"
     Fill "PisCstBox" "49"; Fill "CofinsCstBox" "49"
@@ -90,7 +96,7 @@ try {
 
     # IBPT table: fictitious sample file used by the tests
     $sample = Join-Path $PSScriptRoot "..\tests\PosNfce.Catalog.Tests\TestData\ibpt-sample.csv"
-    Click (FindByName "Tabela IBPT")
+    Settings "Impostos" "Tabela IBPT"
     "ibpt before: $((Find 'StatusText').Current.Name)"
     Fill "FilePathBox" (Resolve-Path $sample).Path
     Click (FindByName "Importar")
@@ -100,14 +106,14 @@ try {
     Shot "5-ibpt"
 
     # IBS/CBS rates for 2027 (fictitious values, test database only)
-    Click (FindByName "Alíquotas IBS/CBS")
+    Settings "Impostos" "Alíquotas IBS/CBS"
     Fill "ValidFromBox" "01/01/2027"; Fill "IbsStateBox" "0,5"; Fill "IbsMunicipalBox" "0,5"; Fill "CbsBox" "9"; Fill "SourceBox" "TESTE"
     Click (FindByName "Salvar")
     "ibs/cbs rates: $(Message)"
 
     # Issuer with the development certificate (dotnet run tools/create-dev-certificate.cs), fictitious data
     $certificate = Join-Path $PSScriptRoot "..\data\dev-certificate.pfx"
-    Click (FindByName "Emitente")
+    Settings "Emitente"
     Fill "CnpjBox" "11.222.333/0001-81"; Fill "IeBox" "0012345678901"
     Fill "LegalNameBox" "EMPRESA DE DESENVOLVIMENTO LTDA"; Fill "TradeNameBox" "Mercadinho Teste"
     Fill "StreetBox" "Rua A"; Fill "NumberBox" "100"; Fill "DistrictBox" "Centro"
@@ -126,7 +132,7 @@ try {
 
     # Leave and come back: data must be reloaded from the database, CSC field empty
     Click (FindByName "Produtos")
-    Click (FindByName "Emitente")
+    Settings "Emitente"
     "reloaded trade name: $((Find 'TradeNameBox').GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).Current.Value)"
     "reloaded csc field: '$((Find 'CscBox').GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).Current.Value)'"
 
@@ -186,7 +192,7 @@ try {
     $listener.Start()
     $printerPort = $listener.LocalEndpoint.Port
     $accept = $listener.AcceptTcpClientAsync()
-    Click (FindByName "Impressora")
+    Settings "Impressora"
     (Find "ConnectionBox").SetFocus()
     Keys "{DOWN}"                       # "Rede (IP)"
     Fill "HostBox" "127.0.0.1"
