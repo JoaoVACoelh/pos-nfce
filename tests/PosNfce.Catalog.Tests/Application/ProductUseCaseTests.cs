@@ -9,9 +9,25 @@ public sealed class ProductUseCaseTests : IDisposable
 {
     private readonly SqliteCatalog _database = new();
 
+    public ProductUseCaseTests()
+    {
+        // Every product needs an existing tax rule; the samples point to this one.
+        using var db = _database.NewContext();
+        db.TaxRules.Add(new TaxRuleRecord
+        {
+            Id = ProductSamples.TaxRuleId, Name = "Regra de teste", Cfop = "5102", Csosn = "102",
+            PisCst = "49", CofinsCst = "49", IbsCbsCst = "000", ClassTrib = "000001",
+        });
+        db.SaveChanges();
+    }
+
     public void Dispose() => _database.Dispose();
 
-    private RegisterProduct NewRegister() => new(new ProductRepository(_database.NewContext()));
+    private RegisterProduct NewRegister()
+    {
+        var db = _database.NewContext();
+        return new(new ProductRepository(db), new TaxRuleRepository(db));
+    }
 
     private FindProductByBarcode NewFind() => new(new ProductRepository(_database.NewContext()));
 
@@ -37,6 +53,14 @@ public sealed class ProductUseCaseTests : IDisposable
 
         Assert.NotNull(found);
         Assert.Equal("SEM GTIN", found.Gtin);
+    }
+
+    [Fact]
+    public async Task Product_with_a_tax_rule_that_does_not_exist_is_rejected()
+    {
+        var error = await Assert.ThrowsAsync<DomainException>(
+            () => NewRegister().ExecuteAsync(ProductSamples.Command(taxRuleId: Guid.NewGuid())));
+        Assert.Contains("regra tributária", error.Message);
     }
 
     [Fact]

@@ -73,7 +73,73 @@ namespace PosNfce.Catalog.Adapters.Out.Persistence.Migrations
                         .IsUnique()
                         .HasFilter("\"Gtin\" <> 'SEM GTIN'");
 
+                    b.HasIndex("TaxRuleId");
+
                     b.ToTable("catalog_products", (string)null);
+                });
+
+            modelBuilder.Entity("PosNfce.Catalog.Adapters.Out.Persistence.TaxRuleRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Cfop")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ClassTrib")
+                        .IsRequired()
+                        .HasMaxLength(6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CofinsCst")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("CofinsRate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Csosn")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("IbsCbsCst")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PisCst")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("PisRate")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("catalog_tax_rules", (string)null);
+                });
+
+            modelBuilder.Entity("PosNfce.Catalog.Adapters.Out.Persistence.ProductRecord", b =>
+                {
+                    b.HasOne("PosNfce.Catalog.Adapters.Out.Persistence.TaxRuleRecord", null)
+                        .WithMany()
+                        .HasForeignKey("TaxRuleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

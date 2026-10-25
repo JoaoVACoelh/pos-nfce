@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using PosNfce.Catalog.Adapters.Out.Persistence;
 using PosNfce.Catalog.Application.Ports;
 using PosNfce.Catalog.Application.Products;
+using PosNfce.Catalog.Application.TaxRules;
 
 namespace PosNfce.Catalog.Adapters;
 
@@ -13,9 +14,12 @@ public static class CatalogModule
     {
         services.AddDbContext<CatalogDbContext>(options => options.UseSqlite(connectionString));
         services.AddScoped<IProductRepository, ProductRepository>();
+        services.AddScoped<ITaxRuleRepository, TaxRuleRepository>();
 
         services.AddScoped<RegisterProduct>();
         services.AddScoped<FindProductByBarcode>();
+        services.AddScoped<RegisterTaxRule>();
+        services.AddScoped<ListTaxRules>();
 
         return services;
     }
