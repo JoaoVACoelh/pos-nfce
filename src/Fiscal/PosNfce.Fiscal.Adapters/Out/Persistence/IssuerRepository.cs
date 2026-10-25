@@ -51,7 +51,7 @@ public sealed class IssuerRepository(FiscalDbContext db, ISecretProtector secret
                 Decrypt(r.CertificatePasswordEncrypted!),
                 new CertificateInfo(Cnpj.Parse(r.CertificateCnpj), r.CertificateSubject ?? "", r.CertificateNotAfter!.Value));
 
-        return Issuer.Restore(r.Id, profile, r.Series, r.NextNumber, csc, certificate);
+        return Issuer.Restore(r.Id, profile, r.Series, r.NextNumber, csc, certificate, r.AutoIssue);
     }
 
     private IssuerRecord ToRecord(Issuer issuer)
@@ -86,6 +86,7 @@ public sealed class IssuerRepository(FiscalDbContext db, ISecretProtector secret
             CertificateCnpj = certificate?.Info.Cnpj.Value,
             CertificateSubject = certificate?.Info.Subject,
             CertificateNotAfter = certificate?.Info.NotAfter,
+            AutoIssue = issuer.AutoIssue,
         };
     }
 

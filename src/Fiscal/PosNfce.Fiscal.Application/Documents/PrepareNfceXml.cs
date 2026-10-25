@@ -5,11 +5,11 @@ using PosNfce.SharedKernel;
 
 namespace PosNfce.Fiscal.Application.Documents;
 
-public sealed record PreparedNfce(int Series, long Number, string AccessKey, string XmlPath);
+public sealed record PreparedNfce(int Series, long Number, string AccessKey, string XmlPath, DateTimeOffset IssuedAt, SignedNfce Signed);
 
 /// <summary>
 /// Turns a pending document into a signed, schema-valid NFC-e XML: reserves the number (once), calculates the taxes,
-/// builds the draft, signs it and keeps the file. Nothing is sent to SEFAZ yet: that is the next step of Stage 3.
+/// builds the draft, signs it and keeps the file. Sending is done by <see cref="IssueNfce"/>, which calls this first.
 /// Always homologation (tpAmb = 2) until Stage 6.
 /// </summary>
 public sealed class PrepareNfceXml(
@@ -31,6 +31,10 @@ public sealed class PrepareNfceXml(
         var csc = store.Csc ?? throw new DomainException("Cadastre o CSC na tela do emitente.");
 
         var document = await documents.FindAsync(documentId, cancellationToken) ?? throw new DomainException("Nota não encontrada.");
+        if (!document.CanBeIssued)
+        {
+            throw new DomainException($"A nota {document.Series}-{document.Number} já foi {(document.Status == FiscalDocumentStatus.Authorized ? "autorizada" : "encerrada")}.");
+        }
         if (document.Number is null)
         {
             await numbering.ReserveAsync(documentId, cancellationToken);
@@ -57,7 +61,7 @@ public sealed class PrepareNfceXml(
         document.RecordSignature(signed.AccessKey);
         await documents.UpdateAsync(document, cancellationToken);
 
-        return new PreparedNfce(document.Series!.Value, document.Number.Value, signed.AccessKey, path);
+        return new PreparedNfce(document.Series!.Value, document.Number.Value, signed.AccessKey, path, issuedAt, signed);
     }
 
     /// <summary>cNF: 8 random digits that are part of the access key; the layout forbids it being equal to the number.</summary>

@@ -10,6 +10,9 @@
     <DockPanel Margin="24">
         <DockPanel DockPanel.Dock="Top">
             <Button DockPanel.Dock="Right" Content="Atualizar" Command="{Binding LoadCommand}" VerticalAlignment="Top" />
+            <Button x:Name="IssueButton" DockPanel.Dock="Right" Content="Emitir (enviar à SEFAZ)" Command="{Binding IssueCommand}"
+                    Style="{StaticResource PrimaryButton}" VerticalAlignment="Top" Margin="0,0,8,0"
+                    ToolTip="Assina e envia a nota selecionada para a SEFAZ (homologação)." />
             <Button x:Name="PrepareXmlButton" DockPanel.Dock="Right" Content="Gerar XML assinado (teste)" Command="{Binding PrepareXmlCommand}"
                     VerticalAlignment="Top" Margin="0,0,8,0" ToolTip="Reserva o número, calcula os impostos, assina e valida o XML. Nada é enviado à SEFAZ." />
             <TextBlock Text="Notas fiscais" Style="{StaticResource PageTitle}" />
@@ -28,7 +31,8 @@
                     <DataGridTextColumn Header="Desconto" Binding="{Binding Discount, StringFormat=C2}" Width="100" />
                     <DataGridTextColumn Header="Total" Binding="{Binding Total, StringFormat=C2}" Width="110" />
                     <DataGridTextColumn Header="Situação" Binding="{Binding Status}" Width="220" />
-                    <DataGridTextColumn Header="Chave de acesso" Binding="{Binding AccessKey}" Width="*" />
+                    <DataGridTextColumn Header="Chave de acesso" Binding="{Binding AccessKey}" Width="330" />
+                    <DataGridTextColumn Header="Último retorno" Binding="{Binding LastMessage}" Width="*" />
                 </DataGrid.Columns>
             </DataGrid>
         </Border>

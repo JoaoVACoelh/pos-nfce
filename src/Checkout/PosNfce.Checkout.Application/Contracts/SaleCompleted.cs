@@ -14,7 +14,8 @@ public sealed record SaleCompleted(
     decimal Total,
     decimal Change,
     IReadOnlyList<SoldItem> Items,
-    IReadOnlyList<ReceivedPayment> Payments) : IDomainEvent;
+    IReadOnlyList<ReceivedPayment> Payments,
+    string? CustomerCpf = null) : IDomainEvent;
 
 public sealed record SoldItem(
     int Line,

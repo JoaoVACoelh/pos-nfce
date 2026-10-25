@@ -46,6 +46,7 @@ public static class FiscalModule
         services.AddScoped<RegisterSaleDocument>();
         services.AddScoped<ListFiscalDocuments>();
         services.AddScoped<PrepareNfceXml>();
+        services.AddScoped<IssueNfce>();
         services.AddScoped<RegisterIbsCbsRates>();
         services.AddScoped<ListIbsCbsRates>();
 

@@ -70,7 +70,7 @@ public sealed class PrepareNfceXmlTests : IDisposable
                     "19059090", null, 0, "5102", "102", "04", 0m, "04", 0m, ibsCbsCst, "000001", reduction),
             ],
             [new ReceivedPayment("DebitCard", 10m, false), new ReceivedPayment("Cash", 10m, false)]);
-        await new SaleCompletedHandler(new RegisterSaleDocument(new FiscalDocumentRepository(NewContext()))).HandleAsync(sale);
+        await new FiscalTestKit(NewContext, _folder).Handler().HandleAsync(sale);
 
         return (await new FiscalDocumentRepository(NewContext()).ListRecentAsync(1)).Single().Id;
     }

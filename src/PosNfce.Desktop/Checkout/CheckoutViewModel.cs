@@ -14,6 +14,7 @@ public enum CheckoutFocus
     Scan,
     Discount,
     PaymentAmount,
+    Cpf,
 }
 
 /// <summary>
@@ -44,6 +45,11 @@ public sealed partial class CheckoutViewModel(UseCaseRunner useCases) : FormView
     public partial bool IsPaying { get; set; }
     [ObservableProperty] public partial bool IsEditingDiscount { get; set; }
     [ObservableProperty] public partial string DiscountText { get; set; } = "";
+
+    /// <summary>"CPF na nota" already set on the sale, formatted; empty when none.</summary>
+    [ObservableProperty] public partial string CustomerCpf { get; set; } = "";
+    [ObservableProperty] public partial bool IsEditingCpf { get; set; }
+    [ObservableProperty] public partial string CpfText { get; set; } = "";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(PaymentMethodLabel))]
@@ -130,6 +136,29 @@ public sealed partial class CheckoutViewModel(UseCaseRunner useCases) : FormView
         FocusRequested?.Invoke(CheckoutFocus.Discount);
     }
 
+    /// <summary>F10: asks for the customer's CPF. Can be done at any moment before the sale closes, even while paying.</summary>
+    [RelayCommand]
+    private void EditCpf()
+    {
+        if (!HasItems)
+        {
+            return;
+        }
+
+        IsEditingCpf = true;
+        CpfText = CustomerCpf;
+        FocusRequested?.Invoke(CheckoutFocus.Cpf);
+    }
+
+    [RelayCommand]
+    private Task ApplyCpfAsync() => RunAsync(async () =>
+    {
+        var typed = CpfText;
+        Show(await useCases.RunAsync<IdentifySaleCustomer, SaleView>(u => u.ExecuteAsync(typed)));
+        IsEditingCpf = false;
+        Message = "";
+    }, IsPaying ? CheckoutFocus.PaymentAmount : CheckoutFocus.Scan);
+
     [RelayCommand]
     private Task ApplyDiscountAsync() => RunAsync(async () =>
     {
@@ -215,6 +244,13 @@ public sealed partial class CheckoutViewModel(UseCaseRunner useCases) : FormView
     [RelayCommand]
     private void Back()
     {
+        if (IsEditingCpf)
+        {
+            IsEditingCpf = false;
+            FocusRequested?.Invoke(IsPaying ? CheckoutFocus.PaymentAmount : CheckoutFocus.Scan);
+            return;
+        }
+
         if (IsEditingDiscount)
         {
             IsEditingDiscount = false;
@@ -238,7 +274,7 @@ public sealed partial class CheckoutViewModel(UseCaseRunner useCases) : FormView
     {
         await useCases.RunAsync<CancelSale>(u => u.ExecuteAsync());
         Show(SaleView.Empty);
-        IsPaying = IsEditingDiscount = false;
+        IsPaying = IsEditingDiscount = IsEditingCpf = false;
         ShowSuccess("Venda cancelada.");
     }, CheckoutFocus.Scan);
 
@@ -273,7 +309,7 @@ public sealed partial class CheckoutViewModel(UseCaseRunner useCases) : FormView
             ShowError(error.Message);
         }
 
-        FocusRequested?.Invoke(IsEditingDiscount ? CheckoutFocus.Discount : focusAfter);
+        FocusRequested?.Invoke(IsEditingCpf ? CheckoutFocus.Cpf : IsEditingDiscount ? CheckoutFocus.Discount : focusAfter);
     }
 
     private void Show(SaleView sale)
@@ -295,5 +331,6 @@ public sealed partial class CheckoutViewModel(UseCaseRunner useCases) : FormView
         OnPropertyChanged(nameof(HasItems));
         OnPropertyChanged(nameof(HasPayments));
         OnPropertyChanged(nameof(CanFinish));
+        CustomerCpf = sale.CustomerCpf ?? "";
     }
 }

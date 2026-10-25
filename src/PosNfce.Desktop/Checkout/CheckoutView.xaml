@@ -36,6 +36,7 @@
         <KeyBinding Key="F7" Command="{Binding SelectPaymentMethodCommand}" CommandParameter="{x:Static sales:PaymentMethod.DebitCard}" />
         <KeyBinding Key="F8" Command="{Binding SelectPaymentMethodCommand}" CommandParameter="{x:Static sales:PaymentMethod.Pix}" />
         <KeyBinding Key="F9" Command="{Binding RemoveLastPaymentCommand}" />
+        <KeyBinding Key="F10" Command="{Binding EditCpfCommand}" />
         <KeyBinding Key="Escape" Command="{Binding BackCommand}" />
     </UserControl.InputBindings>
 
@@ -65,6 +66,7 @@
                 <Button x:Name="FinishButton" Content="Finalizar venda  (F2)" Command="{Binding StartPaymentCommand}"
                         Style="{StaticResource PrimaryButton}" Focusable="False" />
                 <Button Content="Desconto  (F3)" Command="{Binding EditDiscountCommand}" Margin="8,0,0,0" Focusable="False" />
+                <Button x:Name="CpfButton" Content="CPF na nota  (F10)" Command="{Binding EditCpfCommand}" Margin="8,0,0,0" Focusable="False" />
                 <Button Content="Cancelar venda  (F4)" Click="OnCancelClick" Margin="8,0,0,0" Focusable="False" />
             </StackPanel>
 
@@ -105,6 +107,7 @@
                 <TextBlock Style="{StaticResource Shortcut}" Text="Enter  incluir item   ·   ↑ ↓  selecionar   ·   Del  remover item" />
                 <TextBlock Style="{StaticResource Shortcut}" Text="F2  finalizar / concluir   ·   F3  desconto   ·   F4  cancelar venda" />
                 <TextBlock Style="{StaticResource Shortcut}" Text="F5 dinheiro · F6 crédito · F7 débito · F8 PIX · F9 remover pagamento" />
+                <TextBlock Style="{StaticResource Shortcut}" Text="F10  CPF na nota" />
                 <TextBlock Style="{StaticResource Shortcut}" Text="Esc  voltar" />
             </StackPanel>
 
@@ -124,6 +127,19 @@
                         <TextBox x:Name="DiscountBox" Text="{Binding DiscountText, UpdateSourceTrigger=PropertyChanged}" FontSize="16">
                             <TextBox.InputBindings>
                                 <KeyBinding Key="Enter" Command="{Binding ApplyDiscountCommand}" />
+                            </TextBox.InputBindings>
+                        </TextBox>
+                    </DockPanel>
+                    <Grid Margin="0,6,0,0">
+                        <TextBlock Text="CPF na nota (F10)" Style="{StaticResource TotalLabel}" />
+                        <TextBlock x:Name="CustomerCpfText" Text="{Binding CustomerCpf}" Style="{StaticResource TotalValue}" FontSize="16" />
+                    </Grid>
+                    <DockPanel Margin="0,6,0,0" Visibility="{Binding IsEditingCpf, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock DockPanel.Dock="Left" Text="CPF" VerticalAlignment="Center" Margin="0,0,8,0" />
+                        <TextBox x:Name="CpfBox" Text="{Binding CpfText, UpdateSourceTrigger=PropertyChanged}" FontSize="16" MaxLength="14"
+                                 ToolTip="Digite o CPF e tecle Enter. Vazio + Enter remove.">
+                            <TextBox.InputBindings>
+                                <KeyBinding Key="Enter" Command="{Binding ApplyCpfCommand}" />
                             </TextBox.InputBindings>
                         </TextBox>
                     </DockPanel>

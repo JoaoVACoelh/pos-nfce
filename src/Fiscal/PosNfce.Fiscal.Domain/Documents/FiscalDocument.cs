@@ -60,6 +60,17 @@ public sealed class FiscalDocument
 
     /// <summary>44-digit access key, known once the XML is signed.</summary>
     public string? AccessKey { get; private set; }
+
+    /// <summary>Customer's CPF (digits), when the cashier typed it ("CPF na nota").</summary>
+    public string? CustomerCpf { get; private init; }
+
+    /// <summary>SEFAZ authorization protocol and time, once authorized.</summary>
+    public string? Protocol { get; private set; }
+    public DateTimeOffset? AuthorizedAt { get; private set; }
+
+    /// <summary>Last answer from SEFAZ (cStat and xMotivo) or the reason it couldn't be sent.</summary>
+    public int? LastStatusCode { get; private set; }
+    public string? LastMessage { get; private set; }
     public Money Discount { get; }
     public Money Change { get; }
 
@@ -91,7 +102,7 @@ public sealed class FiscalDocument
     /// </summary>
     public static FiscalDocument FromSale(
         Guid saleId, DateTimeOffset soldAt, IReadOnlyList<FiscalItem> items, Money discount, Money total, Money change,
-        IReadOnlyList<FiscalPayment> payments)
+        IReadOnlyList<FiscalPayment> payments, string? customerCpf = null)
     {
         if (items.Count == 0)
         {
@@ -102,7 +113,10 @@ public sealed class FiscalDocument
         var withDiscount = items.Select((item, index) => item with { Discount = shares[index] }).ToList();
 
         var document = new FiscalDocument(
-            Guid.NewGuid(), saleId, soldAt, FiscalDocumentStatus.Pending, null, null, discount, change, withDiscount, payments);
+            Guid.NewGuid(), saleId, soldAt, FiscalDocumentStatus.Pending, null, null, discount, change, withDiscount, payments)
+        {
+            CustomerCpf = customerCpf,
+        };
 
         // The sale and the document must agree to the cent; a difference means the sale data arrived broken.
         if (document.Total != total)
@@ -121,13 +135,23 @@ public sealed class FiscalDocument
 
     public static FiscalDocument Restore(
         Guid id, Guid saleId, DateTimeOffset soldAt, FiscalDocumentStatus status, int? series, long? number,
-        Money discount, Money change, IEnumerable<FiscalItem> items, IEnumerable<FiscalPayment> payments, string? accessKey = null) =>
-        new(id, saleId, soldAt, status, series, number, discount, change, items, payments) { AccessKey = accessKey };
+        Money discount, Money change, IEnumerable<FiscalItem> items, IEnumerable<FiscalPayment> payments, string? accessKey = null,
+        string? customerCpf = null, string? protocol = null, DateTimeOffset? authorizedAt = null, int? lastStatusCode = null,
+        string? lastMessage = null) =>
+        new(id, saleId, soldAt, status, series, number, discount, change, items, payments)
+        {
+            AccessKey = accessKey,
+            CustomerCpf = customerCpf,
+            Protocol = protocol,
+            AuthorizedAt = authorizedAt,
+            LastStatusCode = lastStatusCode,
+            LastMessage = lastMessage,
+        };
 
     /// <summary>Sets the series and number reserved for this document. Happens once, right before issuing.</summary>
     public void AssignNumber(int series, long number)
     {
-        if (Status != FiscalDocumentStatus.Pending)
+        if (!CanBeIssued)
         {
             throw new DomainException("Só uma nota pendente recebe número.");
         }
@@ -148,11 +172,45 @@ public sealed class FiscalDocument
             throw new DomainException("Chave de acesso deve ter 44 dígitos.");
         }
 
-        if (Status != FiscalDocumentStatus.Pending || Number is null)
+        if (!CanBeIssued || Number is null)
         {
             throw new DomainException("Só uma nota pendente e numerada pode ser assinada.");
         }
 
+        // A rejected document is corrected and signed again with the same number: it goes back to pending.
         AccessKey = accessKey;
+        Status = FiscalDocumentStatus.Pending;
+    }
+
+    /// <summary>Pending, or rejected and waiting to be corrected and sent again.</summary>
+    public bool CanBeIssued => Status is FiscalDocumentStatus.Pending or FiscalDocumentStatus.Rejected;
+
+    /// <summary>SEFAZ authorized the document (cStat 100): it now has legal value (in production).</summary>
+    public void Authorize(string protocol, DateTimeOffset authorizedAt, int statusCode, string message)
+    {
+        if (Status != FiscalDocumentStatus.Pending || AccessKey is null)
+        {
+            throw new DomainException("Só uma nota pendente e assinada pode ser autorizada.");
+        }
+
+        (Status, Protocol, AuthorizedAt, LastStatusCode, LastMessage) =
+            (FiscalDocumentStatus.Authorized, protocol, authorizedAt, statusCode, message);
+    }
+
+    /// <summary>SEFAZ refused the document. Its number stays reserved: it is corrected and sent again.</summary>
+    public void Reject(int statusCode, string message)
+    {
+        if (Status != FiscalDocumentStatus.Pending)
+        {
+            throw new DomainException("Só uma nota pendente pode ser rejeitada.");
+        }
+
+        (Status, LastStatusCode, LastMessage) = (FiscalDocumentStatus.Rejected, statusCode, message);
+    }
+
+    /// <summary>It couldn't reach SEFAZ (no internet, timeout): still pending. Stage 4 issues it in contingency.</summary>
+    public void RecordSendFailure(string message)
+    {
+        (LastStatusCode, LastMessage) = (null, message);
     }
 }

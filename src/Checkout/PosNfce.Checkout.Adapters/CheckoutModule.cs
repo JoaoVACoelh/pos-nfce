@@ -30,6 +30,7 @@ public static class CheckoutModule
         services.AddScoped<RemoveSalePayment>();
         services.AddScoped<CompleteSale>();
         services.AddScoped<CancelSale>();
+        services.AddScoped<IdentifySaleCustomer>();
 
         return services;
     }

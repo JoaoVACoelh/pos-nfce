@@ -153,6 +153,10 @@ namespace PosNfce.Checkout.Adapters.Out.Persistence.Migrations
                     b.Property<DateTimeOffset?>("ClosedAt")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("CustomerCpf")
+                        .HasMaxLength(11)
+                        .HasColumnType("TEXT");
+
                     b.Property<decimal>("Discount")
                         .HasColumnType("TEXT");
 

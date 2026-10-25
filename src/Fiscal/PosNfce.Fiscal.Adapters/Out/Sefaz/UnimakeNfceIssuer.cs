@@ -21,22 +21,23 @@ public sealed class UnimakeNfceIssuer : IFiscalDocumentIssuer
 {
     private const int Brazil = 1058;
 
+    /// <summary>
+    /// Waiting longer than this for SEFAZ holds up the cashier; Stage 4 issues in contingency after a timeout.
+    /// </summary>
+    private const int TimeoutMilliseconds = 15_000;
+
+    /// <summary>SEFAZ status codes that mean the document is authorized: 100, and 150 (authorized after the deadline).</summary>
+    private static readonly int[] AuthorizedCodes = [100, 150];
+
     public SignedNfce Sign(NfceDraft draft, IssuerCertificate certificate, Csc csc)
     {
         using var x509 = X509CertificateLoader.LoadPkcs12(certificate.Pfx, certificate.Password, X509KeyStorageFlags.EphemeralKeySet);
         var environment = draft.Homologation ? TipoAmbiente.Homologacao : TipoAmbiente.Producao;
         var state = Enum.Parse<UFBrasil>(draft.Issuer.Address.State.Code);
 
-        var configuration = new Configuracao
-        {
-            TipoDFe = TipoDFe.NFCe,
-            TipoEmissao = TipoEmissao.Normal,
-            TipoAmbiente = environment,
-            CodigoUF = (int)state,
-            CertificadoDigital = x509,
-            CSC = csc.Token,
-            CSCIDToken = int.Parse(csc.TokenId),
-        };
+        var configuration = Configuration(x509, environment, state);
+        configuration.CSC = csc.Token;
+        configuration.CSCIDToken = int.Parse(csc.TokenId);
 
         var nfe = new UnimakeNFe { InfNFeField = InfNFe(draft, environment, state) };
         var batch = new EnviNFe { Versao = "4.00", IdLote = draft.Number.ToString("D15"), IndSinc = SimNao.Sim, NFe = [nfe] };
@@ -52,6 +53,57 @@ public sealed class UnimakeNfceIssuer : IFiscalDocumentIssuer
             throw new DomainException($"O XML da nota não passou na validação: {error.Message}");
         }
     }
+
+    public Task<SefazAnswer> SendAsync(
+        SignedNfce signed, IssuerCertificate certificate, IssuerProfile issuer, bool homologation, CancellationToken cancellationToken = default) =>
+        // Unimake's service is synchronous; run it off the screen's thread.
+        Task.Run(() => Send(signed, certificate, issuer, homologation), cancellationToken);
+
+    private static SefazAnswer Send(SignedNfce signed, IssuerCertificate certificate, IssuerProfile issuer, bool homologation)
+    {
+        using var x509 = X509CertificateLoader.LoadPkcs12(certificate.Pfx, certificate.Password, X509KeyStorageFlags.EphemeralKeySet);
+        var state = Enum.Parse<UFBrasil>(issuer.Address.State.Code);
+        var configuration = Configuration(x509, homologation ? TipoAmbiente.Homologacao : TipoAmbiente.Producao, state);
+
+        try
+        {
+            // Built from the already signed XML: the library keeps the existing signature.
+            using var service = new NFCe.Autorizacao(signed.Xml, configuration);
+            service.Executar();
+
+            var result = service.Result;
+            var protocol = result?.ProtNFe?.InfProt;
+            if (protocol is null)
+            {
+                // The batch itself was refused (e.g. 215 schema, 225, 999): no protocol for the document.
+                return new SefazAnswer(SefazOutcome.Rejected, result?.CStat, result?.XMotivo ?? "Resposta sem protocolo.", null, null, null);
+            }
+
+            if (AuthorizedCodes.Contains(protocol.CStat))
+            {
+                var authorizedXml = service.NfeProcResult?.GerarXML().OuterXml
+                    ?? throw new InvalidOperationException("Authorized without nfeProc XML.");
+                return new SefazAnswer(SefazOutcome.Authorized, protocol.CStat, protocol.XMotivo, protocol.NProt, protocol.DhRecbto, authorizedXml);
+            }
+
+            return new SefazAnswer(SefazOutcome.Rejected, protocol.CStat, protocol.XMotivo, null, null, null);
+        }
+        catch (Exception error) when (error is not InvalidOperationException)
+        {
+            // Network, TLS, timeout or service down: the document stays pending.
+            return new SefazAnswer(SefazOutcome.NotSent, null, error.GetBaseException().Message, null, null, null);
+        }
+    }
+
+    private static Configuracao Configuration(X509Certificate2 certificate, TipoAmbiente environment, UFBrasil state) => new()
+    {
+        TipoDFe = TipoDFe.NFCe,
+        TipoEmissao = TipoEmissao.Normal,
+        TipoAmbiente = environment,
+        CodigoUF = (int)state,
+        CertificadoDigital = certificate,
+        TimeOutWebServiceConnect = TimeoutMilliseconds,
+    };
 
     private static InfNFe InfNFe(NfceDraft draft, TipoAmbiente environment, UFBrasil state)
     {
@@ -104,6 +156,8 @@ public sealed class UnimakeNfceIssuer : IFiscalDocumentIssuer
                     Fone = issuer.Phone,
                 },
             },
+            // Consumer identified by CPF ("CPF na nota"); a final consumer is never an ICMS taxpayer.
+            Dest = draft.CustomerCpf is null ? null : new Dest { CPF = draft.CustomerCpf, IndIEDest = IndicadorIEDestinatario.NaoContribuinte },
             Det = draft.Items.Select(Det).ToList(),
             Total = Total(draft.Totals),
             Transp = new Transp { ModFrete = ModalidadeFrete.SemOcorrenciaTransporte },

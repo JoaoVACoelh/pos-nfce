@@ -28,6 +28,7 @@ public partial class CheckoutView : UserControl
         TextBox box = target switch
         {
             CheckoutFocus.Discount => DiscountBox,
+            CheckoutFocus.Cpf => CpfBox,
             CheckoutFocus.PaymentAmount => PaymentAmountBox,
             _ => ScanBox,
         };

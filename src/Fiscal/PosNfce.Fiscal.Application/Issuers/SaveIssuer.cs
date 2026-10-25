@@ -26,7 +26,8 @@ public sealed record SaveIssuerCommand(
     string? CscTokenId,
     string? Csc,
     byte[]? CertificatePfx,
-    string? CertificatePassword);
+    string? CertificatePassword,
+    bool AutoIssue = false);
 
 public sealed class SaveIssuer(IIssuerRepository issuers, ICertificateReader certificates, TimeProvider clock)
 {
@@ -70,6 +71,8 @@ public sealed class SaveIssuer(IIssuerRepository issuers, ICertificateReader cer
             var info = certificates.Read(pfx, password);
             issuer.AttachCertificate(new IssuerCertificate(pfx, password, info), clock.GetLocalNow());
         }
+
+        issuer.SetAutoIssue(command.AutoIssue);
 
         // CSC and certificate may still be missing (they depend on the SEFAZ accreditation); issuing will require them.
         await issuers.SaveAsync(issuer, cancellationToken);

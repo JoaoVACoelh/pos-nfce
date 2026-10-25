@@ -34,6 +34,9 @@ public sealed partial class IssuerViewModel(UseCaseRunner useCases) : FormViewMo
     [ObservableProperty] public partial string CscTokenId { get; set; } = "";
     [ObservableProperty] public partial string Csc { get; set; } = "";
 
+    /// <summary>Send each sale's NFC-e to SEFAZ when the sale closes. Only with the real certificate and CSC.</summary>
+    [ObservableProperty] public partial bool AutoIssue { get; set; }
+
     [ObservableProperty] public partial string CscStatus { get; set; } = "";
     [ObservableProperty] public partial string CertificateStatus { get; set; } = "";
     [ObservableProperty] public partial bool CertificateNeedsAttention { get; set; }
@@ -71,6 +74,7 @@ public sealed partial class IssuerViewModel(UseCaseRunner useCases) : FormViewMo
         Series = issuer.Series.ToString(Brazilian);
         NextNumber = issuer.NextNumber.ToString(Brazilian);
         CscTokenId = issuer.CscTokenId ?? "";
+        AutoIssue = issuer.AutoIssue;
         Csc = "";
         CscStatus = issuer.HasCsc
             ? "CSC cadastrado. Deixe o campo vazio para manter o atual."
@@ -94,7 +98,7 @@ public sealed partial class IssuerViewModel(UseCaseRunner useCases) : FormViewMo
                 Street, Number, Complement, District, CityName, CityCode, State, PostalCode, Phone,
                 int.TryParse(Series.Trim(), out var series) ? series : throw new DomainException("Série deve ser um número inteiro."),
                 ParseInteger(NextNumber, "Próximo número"),
-                CscTokenId, Csc, pfx, CertificatePassword);
+                CscTokenId, Csc, pfx, CertificatePassword, AutoIssue);
 
             await useCases.RunAsync<SaveIssuer>(u => u.ExecuteAsync(command));
 

@@ -10,6 +10,11 @@ public sealed class FiscalDocumentRecord
     public int? Series { get; set; }
     public long? Number { get; set; }
     public string? AccessKey { get; set; }
+    public string? CustomerCpf { get; set; }
+    public string? Protocol { get; set; }
+    public DateTimeOffset? AuthorizedAt { get; set; }
+    public int? LastStatusCode { get; set; }
+    public string? LastMessage { get; set; }
     public decimal Discount { get; set; }
     public decimal Total { get; set; }
     public decimal Change { get; set; }

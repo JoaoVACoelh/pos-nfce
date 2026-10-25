@@ -9,6 +9,7 @@ public sealed class SaleRecord
     public DateTimeOffset? ClosedAt { get; set; }
     public decimal Discount { get; set; }
     public decimal Total { get; set; }
+    public string? CustomerCpf { get; set; }
     public List<SaleItemRecord> Items { get; set; } = [];
     public List<PaymentRecord> Payments { get; set; } = [];
 }

@@ -12,7 +12,8 @@ public sealed record RegisterSaleDocumentCommand(
     decimal Total,
     decimal Change,
     IReadOnlyList<SaleDocumentItem> Items,
-    IReadOnlyList<SaleDocumentPayment> Payments);
+    IReadOnlyList<SaleDocumentPayment> Payments,
+    string? CustomerCpf = null);
 
 public sealed record SaleDocumentItem(
     int Line, string Code, string Gtin, string Description, string Unit, decimal Quantity, decimal UnitPrice, decimal Total,
@@ -43,7 +44,8 @@ public sealed class RegisterSaleDocument(IFiscalDocumentRepository documents)
             new Money(command.Discount),
             new Money(command.Total),
             new Money(command.Change),
-            command.Payments.Select(p => new FiscalPayment(p.Method, new Money(p.Amount), p.Integrated)).ToList());
+            command.Payments.Select(p => new FiscalPayment(p.Method, new Money(p.Amount), p.Integrated)).ToList(),
+            command.CustomerCpf);
 
         await documents.AddAsync(document, cancellationToken);
         return document.Id;

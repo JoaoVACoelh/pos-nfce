@@ -46,7 +46,8 @@ public sealed record NfceDraft(
     NfceTotals Totals,
     IReadOnlyList<NfcePayment> Payments,
     Money Change,
-    string AdditionalInfo)
+    string AdditionalInfo,
+    string? CustomerCpf)
 {
     /// <summary>In homologation SEFAZ requires this exact description in the first item.</summary>
     public const string HomologationDescription = "NOTA FISCAL EMITIDA EM AMBIENTE DE HOMOLOGACAO - SEM VALOR FISCAL";
@@ -91,7 +92,8 @@ public sealed record NfceDraft(
 
         return new NfceDraft(
             document.Id, series, number, numericCode, issuedAt, homologation, issuer, items, totals,
-            document.Payments.Select(Payment).ToList(), document.Change, ApproximateTaxesText(approximate, approximateSource));
+            document.Payments.Select(Payment).ToList(), document.Change, ApproximateTaxesText(approximate, approximateSource),
+            document.CustomerCpf);
     }
 
     private static Money Sum(IEnumerable<Money> values) => values.Aggregate(Money.Zero, (sum, v) => sum + v);

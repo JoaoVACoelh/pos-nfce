@@ -9,11 +9,12 @@ using PosNfce.SharedKernel;
 namespace PosNfce.Desktop.Fiscal.Documents;
 
 public sealed record FiscalDocumentRow(
-    Guid Id, DateTimeOffset SoldAt, string Number, int ItemCount, decimal Discount, decimal Total, string Status, string AccessKey);
+    Guid Id, DateTimeOffset SoldAt, string Number, int ItemCount, decimal Discount, decimal Total, string Status, string AccessKey,
+    string LastMessage);
 
 /// <summary>
-/// NFC-e of the recent sales and where each one stands. Until the real certificate arrives, a document can be turned into a
-/// signed XML (homologation, not sent) to check what will go to SEFAZ.
+/// NFC-e of the recent sales and where each one stands. A document can be sent to SEFAZ (homologation) or, while the real
+/// certificate doesn't exist, only turned into a signed XML to check what will be sent.
 /// </summary>
 public sealed partial class FiscalDocumentsViewModel(UseCaseRunner useCases) : FormViewModel
 {
@@ -22,7 +23,7 @@ public sealed partial class FiscalDocumentsViewModel(UseCaseRunner useCases) : F
     [ObservableProperty] public partial string Summary { get; set; } = "";
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(PrepareXmlCommand))]
+    [NotifyCanExecuteChangedFor(nameof(PrepareXmlCommand), nameof(IssueCommand))]
     public partial FiscalDocumentRow? SelectedDocument { get; set; }
 
     [RelayCommand]
@@ -35,13 +36,13 @@ public sealed partial class FiscalDocumentsViewModel(UseCaseRunner useCases) : F
         {
             Documents.Add(new FiscalDocumentRow(
                 d.Id, d.SoldAt, d.Number is null ? "—" : $"{d.Series}-{d.Number}", d.ItemCount, d.Discount, d.Total,
-                Label(d.Status, d.AccessKey), d.AccessKey ?? ""));
+                Label(d.Status, d.AccessKey), d.AccessKey ?? "", d.LastMessage ?? ""));
         }
 
         var pending = documents.Count(d => d.Status == FiscalDocumentStatus.Pending);
         Summary = documents.Count == 0
             ? "Nenhuma venda concluída ainda."
-            : $"{documents.Count} notas; {pending} aguardando emissão. O envio à SEFAZ entra com o certificado e o CSC reais da loja.";
+            : $"{documents.Count} notas; {pending} aguardando emissão. Para enviar à SEFAZ (homologação), selecione a nota e clique em Emitir: só funciona com o certificado e o CSC reais da loja.";
     }
 
     /// <summary>Reserves the number (if needed) and writes the signed XML of the selected document. Nothing is sent.</summary>
@@ -55,6 +56,31 @@ public sealed partial class FiscalDocumentsViewModel(UseCaseRunner useCases) : F
             await LoadAsync();
             SelectedDocument = Documents.FirstOrDefault(d => d.Id == id);
             ShowSuccess($"Nota {prepared.Series}-{prepared.Number} assinada e validada (não enviada). Chave {prepared.AccessKey}. Arquivo: {prepared.XmlPath}");
+        }
+        catch (DomainException error)
+        {
+            ShowError(error.Message);
+        }
+    }
+
+    /// <summary>Sends the selected document to SEFAZ (homologation) and shows the answer.</summary>
+    [RelayCommand(CanExecute = nameof(HasSelection))]
+    private async Task IssueAsync()
+    {
+        var id = SelectedDocument!.Id;
+        try
+        {
+            var result = await useCases.RunAsync<IssueNfce, IssueResult>(u => u.ExecuteAsync(id));
+            await LoadAsync();
+            SelectedDocument = Documents.FirstOrDefault(d => d.Id == id);
+            if (result.Authorized)
+            {
+                ShowSuccess(result.Message);
+            }
+            else
+            {
+                ShowError(result.Message);
+            }
         }
         catch (DomainException error)
         {

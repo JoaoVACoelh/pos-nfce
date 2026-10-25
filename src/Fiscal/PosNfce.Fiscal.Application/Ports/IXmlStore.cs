@@ -5,4 +5,7 @@ public interface IXmlStore
 {
     /// <summary>Saves the signed (not yet authorized) XML and returns where it was written.</summary>
     Task<string> SaveSignedAsync(string accessKey, DateTimeOffset issuedAt, string xml, CancellationToken cancellationToken = default);
+
+    /// <summary>Saves the authorized XML (with the SEFAZ protocol) and returns where it was written.</summary>
+    Task<string> SaveAuthorizedAsync(string accessKey, DateTimeOffset issuedAt, string xml, CancellationToken cancellationToken = default);
 }

@@ -24,6 +24,9 @@ public sealed class Sale
     public DateTimeOffset? ClosedAt { get; private set; }
     public Money Discount { get; private set; }
 
+    /// <summary>"CPF na nota": optional customer identification sent in the NFC-e.</summary>
+    public Cpf? CustomerCpf { get; private set; }
+
     public IReadOnlyList<SaleItem> Items => _items;
     public IReadOnlyList<Payment> Payments => _payments;
 
@@ -51,8 +54,15 @@ public sealed class Sale
     public static Sale Open(DateTimeOffset now) => new(Guid.NewGuid(), SaleStatus.Open, now, null, Money.Zero, [], []);
 
     public static Sale Restore(Guid id, SaleStatus status, DateTimeOffset openedAt, DateTimeOffset? closedAt, Money discount,
-        IEnumerable<SaleItem> items, IEnumerable<Payment> payments) =>
-        new(id, status, openedAt, closedAt, discount, items, payments);
+        IEnumerable<SaleItem> items, IEnumerable<Payment> payments, Cpf? customerCpf = null) =>
+        new(id, status, openedAt, closedAt, discount, items, payments) { CustomerCpf = customerCpf };
+
+    /// <summary>Sets or clears (null) the customer's CPF. Allowed until the sale is closed.</summary>
+    public void IdentifyCustomer(Cpf? cpf)
+    {
+        EnsureOpen();
+        CustomerCpf = cpf;
+    }
 
     public SaleItem AddItem(Guid productId, string code, string gtin, string description, string unit,
         Money unitPrice, decimal quantity, TaxSnapshot tax)

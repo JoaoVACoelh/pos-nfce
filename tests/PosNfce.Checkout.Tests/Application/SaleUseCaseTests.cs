@@ -138,6 +138,31 @@ public sealed class SaleUseCaseTests : IDisposable
     }
 
     [Fact]
+    public async Task Customer_cpf_is_kept_with_the_sale_and_sent_in_the_event()
+    {
+        await Scan("7891234567895");
+        var view = await new IdentifySaleCustomer(Repository()).ExecuteAsync("529.982.247-25");
+        Assert.Equal("529.982.247-25", view.CustomerCpf);
+        await Pay(PaymentMethod.Cash, 10m);
+
+        await new CompleteSale(Repository(), _events, TimeProvider.System).ExecuteAsync();
+
+        Assert.Equal("52998224725", Assert.Single(_events.Published.OfType<SaleCompleted>()).CustomerCpf);
+    }
+
+    [Fact]
+    public async Task Empty_cpf_removes_it_and_invalid_cpf_is_refused()
+    {
+        await Scan("7891234567895");
+        await new IdentifySaleCustomer(Repository()).ExecuteAsync("52998224725");
+
+        var view = await new IdentifySaleCustomer(Repository()).ExecuteAsync("");
+
+        Assert.Null(view.CustomerCpf);
+        await Assert.ThrowsAsync<DomainException>(() => new IdentifySaleCustomer(Repository()).ExecuteAsync("123"));
+    }
+
+    [Fact]
     public async Task Failing_reaction_keeps_the_sale_and_returns_a_warning()
     {
         await Scan("7891234567895");

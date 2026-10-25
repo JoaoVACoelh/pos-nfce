@@ -37,7 +37,7 @@ public sealed class FiscalDocumentUseCaseTests : IDisposable
         .UseSqlite($"Data Source={_file}", sqlite => sqlite.MigrationsHistoryTable(FiscalDbContext.MigrationsHistoryTable))
         .Options);
 
-    private SaleCompletedHandler NewHandler() => new(new RegisterSaleDocument(new FiscalDocumentRepository(NewContext())));
+    private SaleCompletedHandler NewHandler() => new FiscalTestKit(NewContext, Path.GetTempPath()).Handler();
 
     private Task<IReadOnlyList<FiscalDocumentSummary>> List() => new ListFiscalDocuments(new FiscalDocumentRepository(NewContext())).ExecuteAsync();
 

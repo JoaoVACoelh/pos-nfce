@@ -27,14 +27,32 @@ namespace PosNfce.Fiscal.Adapters.Out.Persistence.Migrations
                         .HasMaxLength(44)
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTimeOffset?>("AuthorizedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<decimal>("Change")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CustomerCpf")
+                        .HasMaxLength(11)
                         .HasColumnType("TEXT");
 
                     b.Property<decimal>("Discount")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("LastMessage")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("LastStatusCode")
+                        .HasColumnType("INTEGER");
+
                     b.Property<long?>("Number")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("Protocol")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
 
                     b.Property<Guid>("SaleId")
                         .HasColumnType("TEXT");
@@ -222,6 +240,9 @@ namespace PosNfce.Fiscal.Adapters.Out.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("AutoIssue")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("CertificateCnpj")
                         .HasMaxLength(14)

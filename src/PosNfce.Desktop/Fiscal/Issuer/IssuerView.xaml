@@ -167,6 +167,12 @@
                 <PasswordBox x:Name="CertificatePasswordBox" PasswordChanged="OnPasswordChanged" />
                 <TextBlock Style="{StaticResource Hint}"
                            Text="O arquivo e a senha ficam criptografados neste computador. Uma cópia do banco levada para outro computador não abre o certificado." />
+
+                <TextBlock Text="Envio à SEFAZ" Style="{StaticResource SectionTitle}" />
+                <CheckBox x:Name="AutoIssueBox" IsChecked="{Binding AutoIssue}" Margin="0,8,0,0" FontSize="14"
+                          Content="Enviar a NFC-e automaticamente ao concluir cada venda" />
+                <TextBlock Style="{StaticResource Hint}"
+                           Text="Ligue só com o certificado e o CSC reais da loja: o certificado de desenvolvimento é recusado pela SEFAZ. Desligado, as notas ficam em &quot;Notas fiscais&quot; para enviar pelo botão." />
             </StackPanel>
 
             <StackPanel Grid.Row="2" Grid.ColumnSpan="3" Margin="0,24,0,0">

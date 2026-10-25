@@ -139,6 +139,8 @@ try {
     Keys "2*7891234567895{ENTER}"       # 2 x R$ 5,49 = R$ 10,98
     Keys "{F3}"; Keys "0,98{ENTER}"     # discount -> R$ 10,00
     "checkout total: $((Find 'TotalText').Current.Name)"
+    Keys "{F10}"; Keys "52998224725{ENTER}"  # CPF na nota (fictitious, valid check digits)
+    "checkout cpf: $((Find 'CustomerCpfText').Current.Name)"
     Keys "{F2}"                         # payment panel, amount prefilled with what is left
     Keys "{F7}"; Keys "4{ENTER}"        # R$ 4,00 on the debit card terminal
     Keys "{F5}"; Keys "10{ENTER}"       # R$ 10,00 in cash
