@@ -1,0 +1,30 @@
+# Secrets: never commit
+.env
+.env.*
+!.env.example
+*.pfx
+*.p12
+ROADMAP.md
+CLAUDE.md
+
+# Dependencies (installed inside the container)
+/vendor/
+/node_modules/
+
+# Laravel runtime files
+/storage/*.key
+/storage/logs/*
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/xml/
+/public/storage
+/public/hot
+/public/build
+
+# Editors and OS
+.idea/
+.vscode/
+*.swp
+Thumbs.db
+.DS_Store
