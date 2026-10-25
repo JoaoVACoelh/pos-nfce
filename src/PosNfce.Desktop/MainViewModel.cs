@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
 using PosNfce.Desktop.Catalog.Products;
 using PosNfce.Desktop.Catalog.TaxRules;
+using PosNfce.Desktop.Fiscal.Issuer;
 
 namespace PosNfce.Desktop;
 
@@ -23,6 +24,7 @@ public sealed partial class MainViewModel : ObservableObject
     [
         new("Produtos", typeof(ProductsViewModel)),
         new("Regras tributárias", typeof(TaxRulesViewModel)),
+        new("Emitente", typeof(IssuerViewModel)),
     ];
 
     [ObservableProperty]

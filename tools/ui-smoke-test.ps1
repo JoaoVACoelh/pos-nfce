@@ -84,6 +84,31 @@ try {
     $cells = 0..6 | ForEach-Object { $grid.GetCurrentPattern([System.Windows.Automation.GridPattern]::Pattern).GetItem(0, $_).Current.Name }
     "row: $($cells -join ' | ')"
     Shot "4-found-by-gtin"
+
+    # Issuer with the development certificate (dotnet run tools/create-dev-certificate.cs), fictitious data
+    $certificate = Join-Path $PSScriptRoot "..\data\dev-certificate.pfx"
+    Click (FindByName "Emitente")
+    Fill "CnpjBox" "11.222.333/0001-81"; Fill "IeBox" "0012345678901"
+    Fill "LegalNameBox" "EMPRESA DE DESENVOLVIMENTO LTDA"; Fill "TradeNameBox" "Mercadinho Teste"
+    Fill "StreetBox" "Rua A"; Fill "NumberBox" "100"; Fill "DistrictBox" "Centro"
+    Fill "CityNameBox" "Belo Horizonte"; Fill "CityCodeBox" "3106200"; Fill "PostalCodeBox" "30110-000"
+    Fill "CscTokenIdBox" "000001"; Fill "CscBox" "ABCDEF0123456789"
+    Fill "CertificatePathBox" (Resolve-Path $certificate).Path
+    Fill "CertificatePasswordBox" "wrong-password"
+    Click (FindByName "Salvar")
+    "issuer, wrong password: $(Message)"
+    Fill "CertificatePasswordBox" "dev-only"
+    Click (FindByName "Salvar")
+    "issuer: $(Message)"
+    "certificate: $((Find 'CertificateStatusText').Current.Name)"
+    "csc: $((Find 'CscStatusText').Current.Name)"
+    Shot "5-issuer"
+
+    # Leave and come back: data must be reloaded from the database, CSC field empty
+    Click (FindByName "Produtos")
+    Click (FindByName "Emitente")
+    "reloaded trade name: $((Find 'TradeNameBox').GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).Current.Value)"
+    "reloaded csc field: '$((Find 'CscBox').GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).Current.Value)'"
 }
 finally {
     Stop-Process $proc.Id -Force -ErrorAction SilentlyContinue

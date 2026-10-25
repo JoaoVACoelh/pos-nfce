@@ -8,6 +8,7 @@ using PosNfce.Catalog.Adapters;
 using PosNfce.Checkout.Adapters;
 using PosNfce.Desktop.Catalog.Products;
 using PosNfce.Desktop.Catalog.TaxRules;
+using PosNfce.Desktop.Fiscal.Issuer;
 using PosNfce.Desktop.Shared;
 using PosNfce.Fiscal.Adapters;
 using PosNfce.Reports.Adapters;
@@ -35,7 +36,7 @@ public partial class App : Application
             services
                 .AddCatalogModule(ConnectionString)
                 .AddCheckoutModule()
-                .AddFiscalModule()
+                .AddFiscalModule(ConnectionString)
                 .AddReportsModule();
 
             services.AddSingleton<UseCaseRunner>();
@@ -43,6 +44,7 @@ public partial class App : Application
             services.AddSingleton<MainWindow>();
             services.AddTransient<ProductsViewModel>();
             services.AddTransient<TaxRulesViewModel>();
+            services.AddTransient<IssuerViewModel>();
         })
         .Build();
 
@@ -50,6 +52,7 @@ public partial class App : Application
     {
         UseBrazilianFormats();
         await _host.Services.MigrateCatalogDatabaseAsync();
+        await _host.Services.MigrateFiscalDatabaseAsync();
         await _host.StartAsync();
         _host.Services.GetRequiredService<MainWindow>().Show();
         base.OnStartup(e);

@@ -1,0 +1,178 @@
+<UserControl x:Class="PosNfce.Desktop.Fiscal.Issuer.IssuerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:local="clr-namespace:PosNfce.Desktop.Fiscal.Issuer"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=local:IssuerViewModel}"
+             Loaded="OnLoaded">
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <Grid Margin="24" MaxWidth="980" HorizontalAlignment="Left">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="32" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <StackPanel Grid.Row="0" Grid.ColumnSpan="3">
+                <TextBlock Text="Emitente" Style="{StaticResource PageTitle}" />
+                <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,8"
+                           Text="Dados da loja que aparecem na NFC-e. Regime tributário: Simples Nacional." />
+            </StackPanel>
+
+            <!-- Company and address -->
+            <StackPanel Grid.Row="1" Grid.Column="0">
+                <TextBlock Text="Empresa" Style="{StaticResource SectionTitle}" Margin="0" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <Label Content="CNPJ *" Target="{Binding ElementName=CnpjBox}" />
+                        <TextBox x:Name="CnpjBox" Text="{Binding Cnpj}" MaxLength="18" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <Label Content="Inscrição Estadual *" Target="{Binding ElementName=IeBox}" />
+                        <TextBox x:Name="IeBox" Text="{Binding StateRegistration}" MaxLength="20" />
+                    </StackPanel>
+                </Grid>
+                <Label Content="Razão social *" Target="{Binding ElementName=LegalNameBox}" />
+                <TextBox x:Name="LegalNameBox" Text="{Binding LegalName}" MaxLength="60" />
+                <Label Content="Nome fantasia" Target="{Binding ElementName=TradeNameBox}" />
+                <TextBox x:Name="TradeNameBox" Text="{Binding TradeName}" MaxLength="60" />
+                <Label Content="Telefone" Target="{Binding ElementName=PhoneBox}" />
+                <TextBox x:Name="PhoneBox" Text="{Binding Phone}" MaxLength="20" />
+
+                <TextBlock Text="Endereço" Style="{StaticResource SectionTitle}" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="3*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <Label Content="Logradouro *" Target="{Binding ElementName=StreetBox}" />
+                        <TextBox x:Name="StreetBox" Text="{Binding Street}" MaxLength="60" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <Label Content="Número *" Target="{Binding ElementName=NumberBox}" />
+                        <TextBox x:Name="NumberBox" Text="{Binding Number}" MaxLength="60" />
+                    </StackPanel>
+                </Grid>
+                <Label Content="Complemento" Target="{Binding ElementName=ComplementBox}" />
+                <TextBox x:Name="ComplementBox" Text="{Binding Complement}" MaxLength="60" />
+                <Label Content="Bairro *" Target="{Binding ElementName=DistrictBox}" />
+                <TextBox x:Name="DistrictBox" Text="{Binding District}" MaxLength="60" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="3*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <Label Content="Município *" Target="{Binding ElementName=CityNameBox}" />
+                        <TextBox x:Name="CityNameBox" Text="{Binding CityName}" MaxLength="60" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <Label Content="UF *" Target="{Binding ElementName=StateBox}" />
+                        <ComboBox x:Name="StateBox" ItemsSource="{Binding States}" SelectedItem="{Binding State}" />
+                    </StackPanel>
+                </Grid>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <Label Content="Código IBGE do município *" Target="{Binding ElementName=CityCodeBox}" />
+                        <TextBox x:Name="CityCodeBox" Text="{Binding CityCode}" MaxLength="7" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <Label Content="CEP *" Target="{Binding ElementName=PostalCodeBox}" />
+                        <TextBox x:Name="PostalCodeBox" Text="{Binding PostalCode}" MaxLength="9" />
+                    </StackPanel>
+                </Grid>
+                <TextBlock Style="{StaticResource Hint}" Text="O código IBGE tem 7 dígitos; em MG começa com 31 (Belo Horizonte: 3106200)." />
+            </StackPanel>
+
+            <!-- NFC-e settings -->
+            <StackPanel Grid.Row="1" Grid.Column="2">
+                <TextBlock Text="Numeração da NFC-e" Style="{StaticResource SectionTitle}" Margin="0" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <Label Content="Série *" Target="{Binding ElementName=SeriesBox}" />
+                        <TextBox x:Name="SeriesBox" Text="{Binding Series}" MaxLength="3" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <Label Content="Próximo número *" Target="{Binding ElementName=NextNumberBox}" />
+                        <TextBox x:Name="NextNumberBox" Text="{Binding NextNumber}" MaxLength="9" />
+                    </StackPanel>
+                </Grid>
+                <TextBlock Style="{StaticResource Hint}"
+                           Text="Só altere se souber o que está fazendo: números pulados precisam ser inutilizados na SEFAZ." />
+
+                <TextBlock Text="CSC (código de segurança do contribuinte)" Style="{StaticResource SectionTitle}" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="12" />
+                        <ColumnDefinition Width="2*" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <Label Content="ID do CSC" Target="{Binding ElementName=CscTokenIdBox}" />
+                        <TextBox x:Name="CscTokenIdBox" Text="{Binding CscTokenId}" MaxLength="6" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <Label Content="CSC" Target="{Binding ElementName=CscBox}" />
+                        <TextBox x:Name="CscBox" Text="{Binding Csc}" MaxLength="36" />
+                    </StackPanel>
+                </Grid>
+                <TextBlock x:Name="CscStatusText" Style="{StaticResource Hint}" Text="{Binding CscStatus}" />
+                <TextBlock Style="{StaticResource Hint}" Text="Gerados no portal da SEFAZ-MG. Use o CSC de homologação até a loja entrar em produção." />
+
+                <TextBlock Text="Certificado digital A1" Style="{StaticResource SectionTitle}" />
+                <Border Margin="0,8,0,0" Padding="10" BorderThickness="1" BorderBrush="#D9DDE2" Background="White">
+                    <TextBlock x:Name="CertificateStatusText" Text="{Binding CertificateStatus}" TextWrapping="Wrap">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding CertificateNeedsAttention}" Value="True">
+                                        <Setter Property="Foreground" Value="{StaticResource ErrorBrush}" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </Border>
+                <Label Content="Arquivo .pfx (para enviar ou trocar)" Target="{Binding ElementName=CertificatePathBox}" />
+                <DockPanel>
+                    <Button DockPanel.Dock="Right" Content="Escolher..." Click="OnChooseCertificate" Margin="8,0,0,0" />
+                    <TextBox x:Name="CertificatePathBox" Text="{Binding CertificatePath}" />
+                </DockPanel>
+                <Label Content="Senha do certificado" Target="{Binding ElementName=CertificatePasswordBox}" />
+                <PasswordBox x:Name="CertificatePasswordBox" PasswordChanged="OnPasswordChanged" Padding="6,5" FontSize="14" />
+                <TextBlock Style="{StaticResource Hint}"
+                           Text="O arquivo e a senha ficam criptografados neste computador. Uma cópia do banco levada para outro computador não abre o certificado." />
+            </StackPanel>
+
+            <StackPanel Grid.Row="2" Grid.ColumnSpan="3" Margin="0,24,0,0">
+                <Button Content="Salvar" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" />
+                <TextBlock x:Name="MessageText" Text="{Binding Message}" Style="{StaticResource FormMessage}" />
+            </StackPanel>
+        </Grid>
+    </ScrollViewer>
+</UserControl>
