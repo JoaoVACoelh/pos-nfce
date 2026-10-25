@@ -15,6 +15,7 @@ public enum CheckoutFocus
     Discount,
     PaymentAmount,
     Cpf,
+    Quantity,
 }
 
 /// <summary>
@@ -29,6 +30,9 @@ public sealed partial class CheckoutViewModel(UseCaseRunner useCases) : FormView
     public ObservableCollection<PaymentView> Payments { get; } = [];
 
     [ObservableProperty] public partial string Scan { get; set; } = "";
+
+    /// <summary>Quantity of the next scanned item. Back to 1 after each item, like a cashier expects.</summary>
+    [ObservableProperty] public partial string Quantity { get; set; } = "1";
     [ObservableProperty] public partial SaleItemView? SelectedItem { get; set; }
 
     [ObservableProperty] public partial decimal Subtotal { get; set; }
@@ -95,13 +99,30 @@ public sealed partial class CheckoutViewModel(UseCaseRunner useCases) : FormView
             throw new DomainException("A venda está em pagamento. Tecle Esc para voltar aos itens.");
         }
 
-        var typed = Scan;
+        // "3*code" typed in the scan field still works and wins over the quantity field.
+        var quantity = Quantity.Trim();
+        var typed = Scan.Contains('*') || quantity is "" or "1" ? Scan : $"{quantity}*{Scan}";
         Scan = "";
         LastSale = "";
         Show(await useCases.RunAsync<AddItemToSale, SaleView>(u => u.ExecuteAsync(typed)));
         SelectedItem = Items.LastOrDefault();
+        Quantity = "1";
         Message = "";
     }, CheckoutFocus.Scan);
+
+    /// <summary>F11: jumps to the quantity field.</summary>
+    [RelayCommand]
+    private void EditQuantity()
+    {
+        if (!IsPaying)
+        {
+            FocusRequested?.Invoke(CheckoutFocus.Quantity);
+        }
+    }
+
+    /// <summary>Enter in the quantity field: goes on to the scan field.</summary>
+    [RelayCommand]
+    private void ConfirmQuantity() => FocusRequested?.Invoke(CheckoutFocus.Scan);
 
     [RelayCommand]
     private Task RemoveSelectedItemAsync() => RunAsync(async () =>
@@ -275,6 +296,7 @@ public sealed partial class CheckoutViewModel(UseCaseRunner useCases) : FormView
         await useCases.RunAsync<CancelSale>(u => u.ExecuteAsync());
         Show(SaleView.Empty);
         IsPaying = IsEditingDiscount = IsEditingCpf = false;
+        Quantity = "1";
         ShowSuccess("Venda cancelada.");
     }, CheckoutFocus.Scan);
 

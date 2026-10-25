@@ -29,6 +29,7 @@ public partial class CheckoutView : UserControl
         {
             CheckoutFocus.Discount => DiscountBox,
             CheckoutFocus.Cpf => CpfBox,
+            CheckoutFocus.Quantity => QuantityBox,
             CheckoutFocus.PaymentAmount => PaymentAmountBox,
             _ => ScanBox,
         };

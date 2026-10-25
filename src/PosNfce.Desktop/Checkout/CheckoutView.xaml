@@ -37,6 +37,7 @@
         <KeyBinding Key="F8" Command="{Binding SelectPaymentMethodCommand}" CommandParameter="{x:Static sales:PaymentMethod.Pix}" />
         <KeyBinding Key="F9" Command="{Binding RemoveLastPaymentCommand}" />
         <KeyBinding Key="F10" Command="{Binding EditCpfCommand}" />
+        <KeyBinding Key="F11" Command="{Binding EditQuantityCommand}" />
         <KeyBinding Key="Escape" Command="{Binding BackCommand}" />
     </UserControl.InputBindings>
 
@@ -51,15 +52,35 @@
         <DockPanel Grid.Column="0">
             <TextBlock DockPanel.Dock="Top" Text="Caixa" Style="{StaticResource PageTitle}" />
 
-            <TextBox x:Name="ScanBox" DockPanel.Dock="Top" Text="{Binding Scan, UpdateSourceTrigger=PropertyChanged}"
-                     FontSize="26" Padding="10,8" PreviewKeyDown="OnScanKeyDown"
-                     ToolTip="Leia o código de barras ou digite o código. Quantidade: 3*código">
-                <TextBox.InputBindings>
-                    <KeyBinding Key="Enter" Command="{Binding AddItemCommand}" />
-                </TextBox.InputBindings>
-            </TextBox>
+            <Grid DockPanel.Dock="Top">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="130" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Quantidade (F11)" Style="{StaticResource Hint}" Margin="0,0,0,4" />
+                <TextBox x:Name="QuantityBox" Grid.Row="1" Grid.Column="0" Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}"
+                         FontSize="26" Padding="10,8" HorizontalContentAlignment="Right"
+                         ToolTip="Quantidade do próximo item. Tecle Enter para ir ao código; volta para 1 depois de incluir.">
+                    <TextBox.InputBindings>
+                        <KeyBinding Key="Enter" Command="{Binding ConfirmQuantityCommand}" />
+                    </TextBox.InputBindings>
+                </TextBox>
+                <TextBlock Grid.Row="0" Grid.Column="2" Text="Código do produto" Style="{StaticResource Hint}" Margin="0,0,0,4" />
+                <TextBox x:Name="ScanBox" Grid.Row="1" Grid.Column="2" Text="{Binding Scan, UpdateSourceTrigger=PropertyChanged}"
+                         FontSize="26" Padding="10,8" PreviewKeyDown="OnScanKeyDown"
+                         ToolTip="Leia o código de barras ou digite o código e tecle Enter.">
+                    <TextBox.InputBindings>
+                        <KeyBinding Key="Enter" Command="{Binding AddItemCommand}" />
+                    </TextBox.InputBindings>
+                </TextBox>
+            </Grid>
             <TextBlock DockPanel.Dock="Top" Style="{StaticResource Hint}"
-                       Text="Leia o produto ou digite o código e tecle Enter. Quantidade: 3*código ou 0,350*código." />
+                       Text="Leia o produto ou digite o código e tecle Enter. Para outra quantidade, F11 (ou clique em Quantidade), digite e Enter. Também vale 3*código." />
 
             <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,12,0,0"
                         Visibility="{Binding CanFinish, Converter={StaticResource BoolToVisibility}}">
@@ -107,7 +128,7 @@
                 <TextBlock Style="{StaticResource Shortcut}" Text="Enter  incluir item   ·   ↑ ↓  selecionar   ·   Del  remover item" />
                 <TextBlock Style="{StaticResource Shortcut}" Text="F2  finalizar / concluir   ·   F3  desconto   ·   F4  cancelar venda" />
                 <TextBlock Style="{StaticResource Shortcut}" Text="F5 dinheiro · F6 crédito · F7 débito · F8 PIX · F9 remover pagamento" />
-                <TextBlock Style="{StaticResource Shortcut}" Text="F10  CPF na nota" />
+                <TextBlock Style="{StaticResource Shortcut}" Text="F10  CPF na nota   ·   F11  quantidade" />
                 <TextBlock Style="{StaticResource Shortcut}" Text="Esc  voltar" />
             </StackPanel>
 
