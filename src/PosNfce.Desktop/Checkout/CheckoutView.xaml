@@ -4,12 +4,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:local="clr-namespace:PosNfce.Desktop.Checkout"
+             xmlns:shared="clr-namespace:PosNfce.Desktop.Shared"
              xmlns:sales="clr-namespace:PosNfce.Checkout.Domain.Sales;assembly=PosNfce.Checkout.Domain"
              mc:Ignorable="d"
              d:DataContext="{d:DesignInstance Type=local:CheckoutViewModel}"
              Loaded="OnLoaded">
     <UserControl.Resources>
         <local:PaymentMethodLabelConverter x:Key="MethodLabel" />
+        <shared:SelectedWhenEqualConverter x:Key="SelectedWhenEqual" />
         <Style x:Key="TotalLabel" TargetType="TextBlock">
             <Setter Property="FontSize" Value="16" />
             <Setter Property="Foreground" Value="{StaticResource MutedBrush}" />
@@ -39,9 +41,9 @@
 
     <Grid Margin="24">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="24" />
-            <ColumnDefinition Width="380" />
+            <ColumnDefinition Width="2*" MinWidth="340" />
+            <ColumnDefinition Width="20" />
+            <ColumnDefinition Width="*" MinWidth="300" MaxWidth="420" />
         </Grid.ColumnDefinitions>
 
         <!-- Scan and items -->
@@ -58,6 +60,14 @@
             <TextBlock DockPanel.Dock="Top" Style="{StaticResource Hint}"
                        Text="Leia o produto ou digite o código e tecle Enter. Quantidade: 3*código ou 0,350*código." />
 
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="0,12,0,0"
+                        Visibility="{Binding CanFinish, Converter={StaticResource BoolToVisibility}}">
+                <Button x:Name="FinishButton" Content="Finalizar venda  (F2)" Command="{Binding StartPaymentCommand}"
+                        Style="{StaticResource PrimaryButton}" Focusable="False" />
+                <Button Content="Desconto  (F3)" Command="{Binding EditDiscountCommand}" Margin="8,0,0,0" Focusable="False" />
+                <Button Content="Cancelar venda  (F4)" Click="OnCancelClick" Margin="8,0,0,0" Focusable="False" />
+            </StackPanel>
+
             <TextBlock x:Name="MessageText" DockPanel.Dock="Top" Text="{Binding Message}" Style="{StaticResource FormMessage}" FontSize="15" />
             <TextBlock x:Name="LastSaleText" DockPanel.Dock="Top" Text="{Binding LastSale}" FontSize="22" FontWeight="SemiBold"
                        Foreground="{StaticResource SuccessBrush}" Margin="0,8,0,0" TextWrapping="Wrap" />
@@ -67,12 +77,12 @@
                       HeadersVisibility="Column" GridLinesVisibility="Horizontal" Margin="0,12,0,0" FontSize="15" RowHeight="34">
                 <DataGrid.Columns>
                     <DataGridTextColumn Header="#" Binding="{Binding Line}" Width="40" />
-                    <DataGridTextColumn Header="Código" Binding="{Binding Code}" Width="110" />
-                    <DataGridTextColumn Header="Descrição" Binding="{Binding Description}" Width="*" />
-                    <DataGridTextColumn Header="Qtd." Binding="{Binding Quantity, StringFormat=0.####}" Width="70" />
-                    <DataGridTextColumn Header="Un." Binding="{Binding Unit}" Width="45" />
-                    <DataGridTextColumn Header="Preço" Binding="{Binding UnitPrice, StringFormat=C2}" Width="90" />
-                    <DataGridTextColumn Header="Total" Binding="{Binding Total, StringFormat=C2}" Width="100" />
+                    <DataGridTextColumn Header="Código" Binding="{Binding Code}" Width="Auto" MinWidth="70" />
+                    <DataGridTextColumn Header="Descrição" Binding="{Binding Description}" Width="*" MinWidth="140" />
+                    <DataGridTextColumn Header="Qtd." Binding="{Binding Quantity, StringFormat=0.####}" Width="Auto" MinWidth="45" />
+                    <DataGridTextColumn Header="Un." Binding="{Binding Unit}" Width="Auto" MinWidth="40" />
+                    <DataGridTextColumn Header="Preço" Binding="{Binding UnitPrice, StringFormat=C2}" Width="Auto" MinWidth="70" />
+                    <DataGridTextColumn Header="Total" Binding="{Binding Total, StringFormat=C2}" Width="Auto" MinWidth="75" />
                 </DataGrid.Columns>
             </DataGrid>
         </DockPanel>
@@ -80,6 +90,15 @@
         <!-- Totals and payment -->
         <DockPanel Grid.Column="2">
             <StackPanel DockPanel.Dock="Bottom" Margin="0,12,0,0">
+                <StackPanel.Style>
+                    <Style TargetType="StackPanel">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsPaying}" Value="True">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </StackPanel.Style>
                 <TextBlock Text="Atalhos" Style="{StaticResource SectionTitle}" Margin="0,0,0,4" />
                 <TextBlock Style="{StaticResource Shortcut}" Text="Enter  incluir item   ·   ↑ ↓  selecionar   ·   Del  remover item" />
                 <TextBlock Style="{StaticResource Shortcut}" Text="F2  finalizar / concluir   ·   F3  desconto   ·   F4  cancelar venda" />
@@ -87,6 +106,7 @@
                 <TextBlock Style="{StaticResource Shortcut}" Text="Esc  voltar" />
             </StackPanel>
 
+            <ScrollViewer VerticalScrollBarVisibility="Auto" Focusable="False">
             <Border Background="White" BorderBrush="#D9DDE2" BorderThickness="1" Padding="16">
                 <StackPanel>
                     <Grid>
@@ -115,13 +135,37 @@
                     <!-- Payment -->
                     <StackPanel Visibility="{Binding IsPaying, Converter={StaticResource BoolToVisibility}}" Margin="0,16,0,0">
                         <TextBlock Text="Pagamento" Style="{StaticResource SectionTitle}" Margin="0" />
-                        <TextBlock Text="{Binding PaymentMethodLabel, StringFormat='Forma: {0}  (F5–F8 para trocar)'}" Margin="0,6,0,0" FontSize="15" />
+                        <UniformGrid Columns="2" Margin="0,8,-8,0">
+                            <Button Style="{StaticResource OptionButton}" AutomationProperties.Name="Dinheiro"
+                                    Command="{Binding SelectPaymentMethodCommand}" CommandParameter="{x:Static sales:PaymentMethod.Cash}"
+                                    Tag="{Binding PaymentMethod, Converter={StaticResource SelectedWhenEqual}, ConverterParameter={x:Static sales:PaymentMethod.Cash}}">
+                                <TextBlock TextAlignment="Center">Dinheiro<LineBreak /><Run FontSize="11">F5</Run></TextBlock>
+                            </Button>
+                            <Button Style="{StaticResource OptionButton}" AutomationProperties.Name="Crédito"
+                                    Command="{Binding SelectPaymentMethodCommand}" CommandParameter="{x:Static sales:PaymentMethod.CreditCard}"
+                                    Tag="{Binding PaymentMethod, Converter={StaticResource SelectedWhenEqual}, ConverterParameter={x:Static sales:PaymentMethod.CreditCard}}">
+                                <TextBlock TextAlignment="Center">Crédito<LineBreak /><Run FontSize="11">F6</Run></TextBlock>
+                            </Button>
+                            <Button Style="{StaticResource OptionButton}" AutomationProperties.Name="Débito"
+                                    Command="{Binding SelectPaymentMethodCommand}" CommandParameter="{x:Static sales:PaymentMethod.DebitCard}"
+                                    Tag="{Binding PaymentMethod, Converter={StaticResource SelectedWhenEqual}, ConverterParameter={x:Static sales:PaymentMethod.DebitCard}}">
+                                <TextBlock TextAlignment="Center">Débito<LineBreak /><Run FontSize="11">F7</Run></TextBlock>
+                            </Button>
+                            <Button Style="{StaticResource OptionButton}" AutomationProperties.Name="PIX"
+                                    Command="{Binding SelectPaymentMethodCommand}" CommandParameter="{x:Static sales:PaymentMethod.Pix}"
+                                    Tag="{Binding PaymentMethod, Converter={StaticResource SelectedWhenEqual}, ConverterParameter={x:Static sales:PaymentMethod.Pix}}">
+                                <TextBlock TextAlignment="Center">PIX<LineBreak /><Run FontSize="11">F8</Run></TextBlock>
+                            </Button>
+                        </UniformGrid>
+                        <TextBlock Text="{Binding PaymentMethodLabel, StringFormat='Valor em {0}'}" Margin="0,4,0,0" FontSize="14" />
                         <TextBox x:Name="PaymentAmountBox" Text="{Binding PaymentAmount, UpdateSourceTrigger=PropertyChanged}"
                                  FontSize="24" Padding="8,6" Margin="0,6,0,0">
                             <TextBox.InputBindings>
                                 <KeyBinding Key="Enter" Command="{Binding ConfirmPaymentCommand}" />
                             </TextBox.InputBindings>
                         </TextBox>
+                        <Button x:Name="ConfirmPaymentButton" Content="{Binding ConfirmPaymentText}" Command="{Binding ConfirmPaymentCommand}"
+                                Style="{StaticResource PrimaryButton}" Focusable="False" Margin="0,8,0,0" HorizontalAlignment="Stretch" />
                         <ItemsControl ItemsSource="{Binding Payments}" Margin="0,10,0,0">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
@@ -132,6 +176,9 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
+                        <Button Content="Remover último pagamento  (F9)" Command="{Binding RemoveLastPaymentCommand}" Focusable="False"
+                                Margin="0,6,0,0" HorizontalAlignment="Left" FontSize="12" Padding="8,3"
+                                Visibility="{Binding HasPayments, Converter={StaticResource BoolToVisibility}}" />
                         <Grid Margin="0,8,0,0">
                             <TextBlock Text="Falta" Style="{StaticResource TotalLabel}" />
                             <TextBlock x:Name="RemainingText" Text="{Binding Remaining, StringFormat=C2}" Style="{StaticResource TotalValue}" />
@@ -143,6 +190,7 @@
                     </StackPanel>
                 </StackPanel>
             </Border>
+            </ScrollViewer>
         </DockPanel>
     </Grid>
 </UserControl>

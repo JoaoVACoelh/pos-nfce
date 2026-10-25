@@ -34,10 +34,14 @@ public sealed partial class CheckoutViewModel(UseCaseRunner useCases) : FormView
     [ObservableProperty] public partial decimal Discount { get; set; }
     [ObservableProperty] public partial decimal Total { get; set; }
     [ObservableProperty] public partial decimal Paid { get; set; }
-    [ObservableProperty] public partial decimal Remaining { get; set; }
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ConfirmPaymentText))]
+    public partial decimal Remaining { get; set; }
     [ObservableProperty] public partial decimal Change { get; set; }
 
-    [ObservableProperty] public partial bool IsPaying { get; set; }
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanFinish))]
+    public partial bool IsPaying { get; set; }
     [ObservableProperty] public partial bool IsEditingDiscount { get; set; }
     [ObservableProperty] public partial string DiscountText { get; set; } = "";
 
@@ -53,6 +57,13 @@ public sealed partial class CheckoutViewModel(UseCaseRunner useCases) : FormView
     public string PaymentMethodLabel => Label(PaymentMethod);
 
     public bool HasItems => Items.Count > 0;
+
+    public bool HasPayments => Payments.Count > 0;
+
+    /// <summary>Shows the Finish / Discount / Cancel buttons while items are being scanned.</summary>
+    public bool CanFinish => HasItems && !IsPaying;
+
+    public string ConfirmPaymentText => Remaining > 0 ? "Lançar pagamento  (Enter)" : "Concluir venda  (Enter)";
 
     public static string Label(PaymentMethod method) => method switch
     {
@@ -274,5 +285,7 @@ public sealed partial class CheckoutViewModel(UseCaseRunner useCases) : FormView
         (Subtotal, Discount, Total, Paid, Remaining, Change) =
             (sale.Subtotal, sale.Discount, sale.Total, sale.Paid, sale.Remaining, sale.Change);
         OnPropertyChanged(nameof(HasItems));
+        OnPropertyChanged(nameof(HasPayments));
+        OnPropertyChanged(nameof(CanFinish));
     }
 }

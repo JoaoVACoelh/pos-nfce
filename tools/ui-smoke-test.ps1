@@ -138,6 +138,30 @@ try {
     Keys "{ENTER}"                      # close the sale
     "checkout result: $((Find 'LastSaleText').Current.Name)"
     Shot "8-checkout-done"
+
+    # Same kind of sale with the mouse: Finish button, PIX button, confirm button
+    Keys "7891234567895{ENTER}"
+    Click (Find "FinishButton")
+    Click (FindByName "PIX")
+    Click (Find "ConfirmPaymentButton")     # adds R$ 5,49 in PIX
+    "mouse sale button: $((Find 'ConfirmPaymentButton').Current.Name)"
+    Click (Find "ConfirmPaymentButton")     # closes the sale
+    "mouse sale result: $((Find 'LastSaleText').Current.Name)"
+
+    # Hamburger hides and shows the side menu
+    Click (Find "MenuToggle")
+    $menuHidden = -not $script:win.FindFirst($Tree::Descendants, (New-Object $C ($A::NameProperty, "Produtos")))
+    Shot "9-menu-hidden"
+    Click (Find "MenuToggle")
+    "menu hidden after toggle: $menuHidden; back: $([bool]$script:win.FindFirst($Tree::Descendants, (New-Object $C ($A::NameProperty, 'Produtos'))))"
+
+    # Smallest window size (1000 x 600): the checkout must still be usable
+    $script:win.GetCurrentPattern([System.Windows.Automation.WindowPattern]::Pattern).SetWindowVisualState("Normal")
+    $script:win.GetCurrentPattern([System.Windows.Automation.TransformPattern]::Pattern).Resize(1000, 600)
+    Start-Sleep -Milliseconds 800
+    Keys "7891234567895{ENTER}"
+    Keys "{F2}"
+    Shot "10-small-window"
 }
 finally {
     Stop-Process $proc.Id -Force -ErrorAction SilentlyContinue

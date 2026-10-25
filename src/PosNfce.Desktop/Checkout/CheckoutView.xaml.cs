@@ -54,7 +54,6 @@ public partial class CheckoutView : UserControl
         }
     }
 
-    // F4 asks for confirmation here: a dialog is a view concern. The default button is "No", so a stray Enter doesn't cancel.
     private async void OnPreviewKeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key != Key.F4 || !ViewModel.HasItems)
@@ -63,6 +62,14 @@ public partial class CheckoutView : UserControl
         }
 
         e.Handled = true;
+        await ConfirmCancelAsync();
+    }
+
+    private async void OnCancelClick(object sender, RoutedEventArgs e) => await ConfirmCancelAsync();
+
+    // A dialog is a view concern. The default button is "No", so a stray Enter doesn't cancel the sale.
+    private async Task ConfirmCancelAsync()
+    {
         var answer = MessageBox.Show(
             "Cancelar a venda inteira?", "Cancelar venda", MessageBoxButton.YesNo, MessageBoxImage.Question, MessageBoxResult.No);
         if (answer == MessageBoxResult.Yes)
