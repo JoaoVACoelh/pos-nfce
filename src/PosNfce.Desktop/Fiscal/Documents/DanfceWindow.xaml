@@ -5,7 +5,7 @@
         Background="{StaticResource PageBrush}">
     <DockPanel>
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="16">
-            <Button x:Name="PrintButton" Content="Imprimir..." Click="OnPrint" Style="{StaticResource PrimaryButton}" />
+            <Button x:Name="PrintButton" Content="Imprimir em outra impressora..." ToolTip="Escolhe qualquer impressora do Windows (o cupom vai como imagem)." Click="OnPrint" Style="{StaticResource PrimaryButton}" />
             <Button Content="Salvar como imagem..." Click="OnSaveImage" Margin="8,0,0,0" />
             <Button Content="Fechar" Click="OnClose" Margin="8,0,0,0" IsCancel="True" />
         </StackPanel>

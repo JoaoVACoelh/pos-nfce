@@ -1,6 +1,7 @@
 using PosNfce.Checkout.Application.Contracts;
 using PosNfce.Fiscal.Application.Documents;
 using PosNfce.Fiscal.Application.Ports;
+using PosNfce.Fiscal.Application.Printing;
 using PosNfce.SharedKernel;
 
 namespace PosNfce.Fiscal.Adapters.In;
@@ -8,9 +9,12 @@ namespace PosNfce.Fiscal.Adapters.In;
 /// <summary>
 /// Inbound adapter: translates Checkout's <see cref="SaleCompleted"/> into Fiscal's own command, so Fiscal's
 /// application layer never depends on Checkout. When the issuer has automatic issuing on, the NFC-e is sent right away;
-/// if it isn't authorized, the exception carries the reason and the checkout shows it to the cashier.
+/// if it isn't authorized, the exception carries the reason and the checkout shows it to the cashier. Once authorized, the
+/// DANFCE is printed when the printer is set to print automatically.
 /// </summary>
-public sealed class SaleCompletedHandler(RegisterSaleDocument registerDocument, IIssuerRepository issuers, IssueNfce issueNfce)
+public sealed class SaleCompletedHandler(
+    RegisterSaleDocument registerDocument, IIssuerRepository issuers, IssueNfce issueNfce,
+    IReceiptPrinterSettingsStore printerSettings, PrintDanfce printDanfce)
     : IEventHandler<SaleCompleted>
 {
     public async Task HandleAsync(SaleCompleted sale, CancellationToken cancellationToken = default)
@@ -37,6 +41,20 @@ public sealed class SaleCompletedHandler(RegisterSaleDocument registerDocument, 
         if (!result.Authorized)
         {
             throw new DomainException(result.Message);
+        }
+
+        if (!(await printerSettings.GetAsync(cancellationToken)).PrintAfterAuthorization)
+        {
+            return;
+        }
+
+        try
+        {
+            await printDanfce.ExecuteAsync(documentId.Value, cancellationToken);
+        }
+        catch (DomainException error)
+        {
+            throw new DomainException($"NFC-e autorizada, mas o cupom não foi impresso: {error.Message} Reimprima em \"Notas fiscais\".");
         }
     }
 }

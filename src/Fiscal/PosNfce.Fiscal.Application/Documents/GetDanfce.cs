@@ -3,8 +3,8 @@ using PosNfce.SharedKernel;
 
 namespace PosNfce.Fiscal.Application.Documents;
 
-/// <summary>The DANFCE of a signed or authorized document, ready to preview or print.</summary>
-public sealed class GetDanfce(IFiscalDocumentRepository documents, IIssuerRepository issuers)
+/// <summary>The DANFCE of a signed or authorized document, laid out for the configured paper width.</summary>
+public sealed class GetDanfce(IFiscalDocumentRepository documents, IIssuerRepository issuers, IReceiptPrinterSettingsStore printer)
 {
     /// <summary>Always homologation until Stage 6, like the documents themselves.</summary>
     private const bool Homologation = true;
@@ -13,6 +13,7 @@ public sealed class GetDanfce(IFiscalDocumentRepository documents, IIssuerReposi
     {
         var document = await documents.FindAsync(documentId, cancellationToken) ?? throw new DomainException("Nota não encontrada.");
         var issuer = await issuers.GetAsync(cancellationToken) ?? throw new DomainException("Cadastre o emitente.");
-        return DanfceLayout.Build(document, issuer.Profile, Homologation);
+        var settings = await printer.GetAsync(cancellationToken);
+        return DanfceLayout.Build(document, issuer.Profile, Homologation, settings.Columns);
     }
 }

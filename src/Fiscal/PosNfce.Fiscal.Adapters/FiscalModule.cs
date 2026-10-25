@@ -6,12 +6,14 @@ using PosNfce.Fiscal.Adapters.In;
 using PosNfce.Fiscal.Adapters.Out.Catalog;
 using PosNfce.Fiscal.Adapters.Out.Certificates;
 using PosNfce.Fiscal.Adapters.Out.Files;
+using PosNfce.Fiscal.Adapters.Out.Printing;
 using PosNfce.Fiscal.Adapters.Out.Sefaz;
 using PosNfce.Fiscal.Adapters.Out.Persistence;
 using PosNfce.Fiscal.Adapters.Out.Security;
 using PosNfce.Fiscal.Application.Documents;
 using PosNfce.Fiscal.Application.Issuers;
 using PosNfce.Fiscal.Application.Ports;
+using PosNfce.Fiscal.Application.Printing;
 using PosNfce.Fiscal.Application.Taxes;
 using PosNfce.SharedKernel;
 
@@ -35,6 +37,8 @@ public static class FiscalModule
         services.AddScoped<IApproximateTaxRates, CatalogApproximateTaxRates>();
         services.AddSingleton<IFiscalDocumentIssuer, UnimakeNfceIssuer>();
         services.AddSingleton<IXmlStore>(new FileXmlStore(dataFolder));
+        services.AddScoped<IReceiptPrinterSettingsStore, ReceiptPrinterSettingsStore>();
+        services.AddSingleton<IReceiptPrinter, EscPosReceiptPrinter>();
         services.AddScoped<IEventHandler<SaleCompleted>, SaleCompletedHandler>();
         if (OperatingSystem.IsWindows())
         {
@@ -48,6 +52,10 @@ public static class FiscalModule
         services.AddScoped<PrepareNfceXml>();
         services.AddScoped<IssueNfce>();
         services.AddScoped<GetDanfce>();
+        services.AddScoped<PrintDanfce>();
+        services.AddScoped<PrintTestPage>();
+        services.AddScoped<GetReceiptPrinterSettings>();
+        services.AddScoped<SaveReceiptPrinterSettings>();
         services.AddScoped<RegisterIbsCbsRates>();
         services.AddScoped<ListIbsCbsRates>();
 

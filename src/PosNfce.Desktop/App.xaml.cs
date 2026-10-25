@@ -13,6 +13,7 @@ using PosNfce.Desktop.Fiscal.IbsCbs;
 using PosNfce.Desktop.Catalog.Products;
 using PosNfce.Desktop.Catalog.TaxRules;
 using PosNfce.Desktop.Fiscal.Issuer;
+using PosNfce.Desktop.Fiscal.Printer;
 using PosNfce.Desktop.Shared;
 using PosNfce.Fiscal.Adapters;
 using PosNfce.Reports.Adapters;
@@ -53,6 +54,7 @@ public partial class App : Application
             services.AddTransient<ProductsViewModel>();
             services.AddTransient<TaxRulesViewModel>();
             services.AddTransient<IssuerViewModel>();
+            services.AddTransient<PrinterViewModel>();
             services.AddTransient<IbptViewModel>();
             services.AddTransient<IbsCbsRatesViewModel>();
         })

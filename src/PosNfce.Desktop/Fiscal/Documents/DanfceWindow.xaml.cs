@@ -10,12 +10,11 @@ using QRCoder;
 namespace PosNfce.Desktop.Fiscal.Documents;
 
 /// <summary>
-/// Shows the DANFCE as it will come out of an 80 mm printer, and prints it on any Windows printer (thermal printers with
-/// a Windows driver included). The ESC/POS path for printers without a driver comes with the printer model (Stage 3).
+/// Shows the DANFCE as it will come out of the receipt printer, and prints it as an image on any other Windows printer.
+/// The receipt printer itself gets ESC/POS commands ("Imprimir DANFCE" in "Notas fiscais").
 /// </summary>
 public partial class DanfceWindow : Window
 {
-    private const string QrPlaceholder = "[QRCODE]";
     private readonly Danfce _danfce;
 
     public DanfceWindow(Danfce danfce)
@@ -30,7 +29,7 @@ public partial class DanfceWindow : Window
         var font = new FontFamily("Consolas");
         foreach (var line in _danfce.Lines)
         {
-            if (line.Text == QrPlaceholder)
+            if (line.Text == Danfce.QrCodePlaceholder)
             {
                 ReceiptLines.Children.Add(QrImage());
                 continue;
@@ -47,8 +46,8 @@ public partial class DanfceWindow : Window
                 Foreground = line.Style is DanfceStyle.Rule or DanfceStyle.Small ? Brushes.DimGray : Brushes.Black,
                 TextAlignment = centered ? TextAlignment.Center : TextAlignment.Left,
                 TextWrapping = centered ? TextWrapping.Wrap : TextWrapping.NoWrap,
-                // 48 characters of Consolas 12 ≈ 80 mm paper width.
-                Width = 48 * 6.6,
+                // One Consolas 12 character is about 6.6 px: 48 of them ≈ 80 mm paper.
+                Width = _danfce.Width * 6.6,
             });
         }
     }

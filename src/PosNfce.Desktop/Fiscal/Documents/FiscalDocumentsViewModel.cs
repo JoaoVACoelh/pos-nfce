@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PosNfce.Desktop.Shared;
 using PosNfce.Fiscal.Application.Documents;
+using PosNfce.Fiscal.Application.Printing;
 using PosNfce.Fiscal.Domain.Documents;
 using PosNfce.SharedKernel;
 
@@ -26,7 +27,7 @@ public sealed partial class FiscalDocumentsViewModel(UseCaseRunner useCases) : F
     [ObservableProperty] public partial string Summary { get; set; } = "";
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(PrepareXmlCommand), nameof(IssueCommand), nameof(ShowDanfceCommand))]
+    [NotifyCanExecuteChangedFor(nameof(PrepareXmlCommand), nameof(IssueCommand), nameof(ShowDanfceCommand), nameof(PrintDanfceCommand))]
     public partial FiscalDocumentRow? SelectedDocument { get; set; }
 
     [RelayCommand]
@@ -99,6 +100,22 @@ public sealed partial class FiscalDocumentsViewModel(UseCaseRunner useCases) : F
         try
         {
             ShowDanfceRequested?.Invoke(await useCases.RunAsync<GetDanfce, Danfce>(u => u.ExecuteAsync(id)));
+        }
+        catch (DomainException error)
+        {
+            ShowError(error.Message);
+        }
+    }
+
+    /// <summary>Prints the DANFCE of the selected document on the receipt printer (reprints included).</summary>
+    [RelayCommand(CanExecute = nameof(HasSelection))]
+    private async Task PrintDanfceAsync()
+    {
+        var (id, number) = (SelectedDocument!.Id, SelectedDocument.Number);
+        try
+        {
+            await useCases.RunAsync<PrintDanfce>(u => u.ExecuteAsync(id));
+            ShowSuccess($"DANFCE da nota {number} enviado para a impressora.");
         }
         catch (DomainException error)
         {

@@ -355,6 +355,45 @@ namespace PosNfce.Fiscal.Adapters.Out.Persistence.Migrations
                     b.ToTable("fiscal_issuers", (string)null);
                 });
 
+            modelBuilder.Entity("PosNfce.Fiscal.Adapters.Out.Persistence.ReceiptPrinterRecord", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CodePage")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Columns")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Connection")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("CutPaper")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Host")
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Port")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("PrintAfterAuthorization")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PrinterName")
+                        .HasMaxLength(260)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("QrCode")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("fiscal_receipt_printer", (string)null);
+                });
+
             modelBuilder.Entity("PosNfce.Fiscal.Adapters.Out.Persistence.FiscalItemRecord", b =>
                 {
                     b.HasOne("PosNfce.Fiscal.Adapters.Out.Persistence.FiscalDocumentRecord", null)

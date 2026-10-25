@@ -20,13 +20,16 @@ public enum DanfceStyle
 public sealed record DanfceLine(string Text, DanfceStyle Style = DanfceStyle.Normal);
 
 /// <summary>
-/// The consumer receipt of an NFC-e (DANFCE) as text lines for an 80 mm printer, plus the QR Code content.
-/// The same lines feed the screen preview, a Windows printer and, later, the ESC/POS printer.
+/// The consumer receipt of an NFC-e (DANFCE) as text lines of <see cref="Width"/> characters, plus the QR Code content.
+/// The same lines feed the screen preview, a Windows printer and the ESC/POS printer.
 /// </summary>
 public sealed record Danfce(IReadOnlyList<DanfceLine> Lines, string QrCode, int Width, bool Authorized)
 {
     /// <summary>Characters per line on an 80 mm thermal printer with the standard font.</summary>
-    public const int Columns = 48;
+    public const int DefaultColumns = 48;
+
+    /// <summary>Marks where the QR Code goes; each output draws it its own way.</summary>
+    public const string QrCodePlaceholder = "[QRCODE]";
 }
 
 /// <summary>
@@ -38,16 +41,25 @@ public static class DanfceLayout
 {
     private static readonly CultureInfo Brazilian = CultureInfo.GetCultureInfo("pt-BR");
 
-    public static Danfce Build(FiscalDocument document, IssuerProfile issuer, bool homologation)
+    /// <param name="columns">Characters per line of the paper: 48 or 42 on 80 mm, 32 on 58 mm.</param>
+    public static Danfce Build(FiscalDocument document, IssuerProfile issuer, bool homologation, int columns = Danfce.DefaultColumns)
     {
+        if (columns is < 32 or > 64)
+        {
+            throw new DomainException("Largura do cupom deve ficar entre 32 e 64 colunas.");
+        }
+
         if (document.AccessKey is null || document.Number is null)
         {
             throw new DomainException("A nota ainda não foi assinada: gere o XML ou emita antes de ver o DANFCE.");
         }
 
         var lines = new List<DanfceLine>();
-        void Add(string text, DanfceStyle style = DanfceStyle.Normal) => lines.Add(new DanfceLine(text, style));
-        void Rule() => lines.Add(new DanfceLine(new string('-', Danfce.Columns), DanfceStyle.Rule));
+        // Every line fits the paper: long ones are wrapped here, not by the printer, so centering stays right.
+        void Add(string text, DanfceStyle style = DanfceStyle.Normal) =>
+            lines.AddRange((text.Length <= columns ? new[] { text } : Wrap(text, columns)).Select(part => new DanfceLine(part, style)));
+        void Rule() => lines.Add(new DanfceLine(new string('-', columns), DanfceStyle.Rule));
+        string Columns(string left, string right) => DanfceLayout.Columns(left, right, columns);
 
         // Issuer
         Add(issuer.LegalName, DanfceStyle.CenteredBold);
@@ -61,14 +73,19 @@ public static class DanfceLayout
         Rule();
 
         // Items
-        Add(Columns("#  CÓDIGO / DESCRIÇÃO", "QTD UN  VL UNIT  VL TOTAL"), DanfceStyle.Small);
+        if (columns >= 42)
+        {
+            Add(Columns("#  CÓDIGO / DESCRIÇÃO", "QTD UN  VL UNIT  VL TOTAL"), DanfceStyle.Small);
+        }
+        else
+        {
+            Add("#  CÓDIGO / DESCRIÇÃO", DanfceStyle.Small);
+            Add(Columns("", "QTD UN x VL UNIT = VL TOTAL"), DanfceStyle.Small);
+        }
         foreach (var item in document.Items)
         {
             var description = homologation && item.Line == 1 ? NfceDraft.HomologationDescription : item.Description;
-            foreach (var part in Wrap($"{item.Line:000} {item.Code} {description}", Danfce.Columns))
-            {
-                Add(part);
-            }
+            Add($"{item.Line:000} {item.Code} {description}");
 
             Add(Columns("", $"{Quantity(item.Quantity)} {item.Unit} x {Value(item.UnitPrice)} = {Value(item.GrossTotal)}"));
         }
@@ -121,16 +138,13 @@ public static class DanfceLayout
         }
 
         // The QR Code goes here (the printer or the preview draws it between these lines).
-        Add("[QRCODE]", DanfceStyle.Centered);
+        lines.Add(new DanfceLine(Danfce.QrCodePlaceholder, DanfceStyle.Centered));
 
         // Approximate taxes (Lei 12.741/2012) and homologation notice
         if (!string.IsNullOrEmpty(document.AdditionalInfo))
         {
             Rule();
-            foreach (var part in Wrap(document.AdditionalInfo, Danfce.Columns))
-            {
-                Add(part, DanfceStyle.Small);
-            }
+            Add(document.AdditionalInfo, DanfceStyle.Small);
         }
 
         if (homologation)
@@ -140,20 +154,20 @@ public static class DanfceLayout
             Add("SEM VALOR FISCAL", DanfceStyle.CenteredBold);
         }
 
-        return new Danfce(lines, document.QrCode ?? "", Danfce.Columns, document.Status == FiscalDocumentStatus.Authorized);
+        return new Danfce(lines, document.QrCode ?? "", columns, document.Status == FiscalDocumentStatus.Authorized);
     }
 
     /// <summary>Left text and right text on one line, padded with spaces; the left side is cut if both don't fit.</summary>
-    internal static string Columns(string left, string right)
+    internal static string Columns(string left, string right, int width)
     {
-        var space = Danfce.Columns - right.Length - 1;
+        var space = width - right.Length - 1;
         if (space <= 0)
         {
-            return right.Length > Danfce.Columns ? right[..Danfce.Columns] : right;
+            return right.Length > width ? right[..width] : right;
         }
 
         var cut = left.Length > space ? left[..space] : left;
-        return cut + new string(' ', Danfce.Columns - cut.Length - right.Length) + right;
+        return cut + new string(' ', width - cut.Length - right.Length) + right;
     }
 
     internal static IEnumerable<string> Wrap(string text, int width)

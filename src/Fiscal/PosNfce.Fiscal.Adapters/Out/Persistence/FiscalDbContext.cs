@@ -16,6 +16,8 @@ public sealed class FiscalDbContext(DbContextOptions<FiscalDbContext> options) :
 
     public DbSet<IbsCbsRateRecord> IbsCbsRates => Set<IbsCbsRateRecord>();
 
+    public DbSet<ReceiptPrinterRecord> ReceiptPrinter => Set<ReceiptPrinterRecord>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<IssuerRecord>(issuer =>
@@ -80,6 +82,15 @@ public sealed class FiscalDbContext(DbContextOptions<FiscalDbContext> options) :
             rate.ToTable("fiscal_ibs_cbs_rates");
             rate.HasKey(r => r.ValidFrom);
             rate.Property(r => r.Source).HasMaxLength(200);
+        });
+
+        modelBuilder.Entity<ReceiptPrinterRecord>(printer =>
+        {
+            printer.ToTable("fiscal_receipt_printer");
+            printer.HasKey(p => p.Id);
+            printer.Property(p => p.Id).ValueGeneratedNever();
+            printer.Property(p => p.PrinterName).HasMaxLength(260);
+            printer.Property(p => p.Host).HasMaxLength(255);
         });
 
         modelBuilder.Entity<FiscalPaymentRecord>(payment =>

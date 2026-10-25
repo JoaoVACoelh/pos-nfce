@@ -4,6 +4,7 @@
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" />
+    <PackageReference Include="QRCoder" />
     <PackageReference Include="Unimake.DFe" />
   </ItemGroup>
 

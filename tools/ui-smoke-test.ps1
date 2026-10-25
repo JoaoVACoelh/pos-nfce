@@ -180,6 +180,31 @@ try {
     "danfce window: $($null -ne $danfce)"
     Shot "8c-danfce"
     Keys "{ESC}"
+
+    # Printer screen: a local TCP listener plays a network ESC/POS printer and receives the test page
+    $listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, 0)
+    $listener.Start()
+    $printerPort = $listener.LocalEndpoint.Port
+    $accept = $listener.AcceptTcpClientAsync()
+    Click (FindByName "Impressora")
+    (Find "ConnectionBox").SetFocus()
+    Keys "{DOWN}"                       # "Rede (IP)"
+    Fill "HostBox" "127.0.0.1"
+    Fill "PortBox" "$printerPort"
+    Click (Find "TestPageButton")
+    Start-Sleep -Seconds 1
+    "printer test: $(Message)"
+    if ($accept.Wait(3000)) {
+        $stream = $accept.Result.GetStream(); $buffer = New-Object byte[] 65536; $total = 0
+        $stream.ReadTimeout = 2000
+        try { while (($n = $stream.Read($buffer, $total, $buffer.Length - $total)) -gt 0) { $total += $n } } catch {}
+        "printer bytes: $total, starts with ESC @: $($buffer[0] -eq 0x1B -and $buffer[1] -eq 0x40), ends with cut: $($buffer[$total-3] -eq 0x1D -and $buffer[$total-2] -eq 0x56)"
+        $accept.Result.Dispose()
+    } else { "printer bytes: nothing received" }
+    $listener.Stop()
+    Click (Find "SavePrinterButton")
+    "printer save: $(Message)"
+    Shot "8d-printer"
     Click (FindByName "Caixa")
 
     # Hamburger slides the side menu closed and open (animated: the items stay in the tree, but off screen)

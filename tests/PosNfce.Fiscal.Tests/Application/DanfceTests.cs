@@ -7,6 +7,7 @@ using PosNfce.Fiscal.Adapters.Out.Persistence;
 using PosNfce.Fiscal.Application.Documents;
 using PosNfce.Fiscal.Application.Issuers;
 using PosNfce.Fiscal.Application.Ports;
+using PosNfce.Fiscal.Application.Printing;
 using PosNfce.Fiscal.Domain.Documents;
 using PosNfce.SharedKernel;
 
@@ -18,6 +19,7 @@ public sealed class DanfceTests : IDisposable
 {
     private readonly string _folder = Directory.CreateTempSubdirectory("posnfce-danfce-").FullName;
     private readonly FakeSefaz _sefaz = new();
+    private readonly FakeReceiptPrinter _printer = new();
 
     public DanfceTests()
     {
@@ -35,15 +37,15 @@ public sealed class DanfceTests : IDisposable
         .UseSqlite($"Data Source={Path.Combine(_folder, "pos.db")}", sqlite => sqlite.MigrationsHistoryTable(FiscalDbContext.MigrationsHistoryTable))
         .Options);
 
-    private FiscalTestKit Kit() => new(NewContext, _folder, _sefaz);
+    private FiscalTestKit Kit() => new(NewContext, _folder, _sefaz, _printer);
 
-    private GetDanfce NewGetDanfce() => new(new FiscalDocumentRepository(NewContext()), Kit().Issuers());
+    private GetDanfce NewGetDanfce() => Kit().GetDanfce();
 
-    private async Task SaveIssuerAsync() =>
+    private async Task SaveIssuerAsync(bool autoIssue = false) =>
         await new SaveIssuer(Kit().Issuers(), new X509CertificateReader(), TimeProvider.System).ExecuteAsync(new SaveIssuerCommand(
             "11222333000181", "0000000000000", "EMPRESA TESTE LTDA", null, "Rua A", "100", null, "Centro", "Belo Horizonte",
             "3106200", "MG", "30110000", null, 1, 1, "1", "TESTE0123456789ABCDEF",
-            TestCertificates.Create("11222333000181", DateTimeOffset.Now.AddYears(1)), TestCertificates.Password));
+            TestCertificates.Create("11222333000181", DateTimeOffset.Now.AddYears(1)), TestCertificates.Password, autoIssue));
 
     private async Task<Guid> PendingAsync(string? cpf = null)
     {
@@ -83,7 +85,7 @@ public sealed class DanfceTests : IDisposable
         Assert.Matches("^https?://", texts[texts.IndexOf("Consulte pela Chave de Acesso em") + 1]);
         Assert.Contains("PRÉVIA - NOTA AINDA NÃO AUTORIZADA PELA SEFAZ", texts);
         Assert.Contains("CONSUMIDOR NÃO IDENTIFICADO", texts);
-        Assert.Contains(string.Join(' ', prepared.AccessKey.Chunk(4).Select(c => new string(c))), texts);
+        Assert.Contains(string.Join(' ', prepared.AccessKey.Chunk(4).Select(c => new string(c))), string.Join(' ', texts));
         Assert.Contains(texts, t => t.StartsWith("001 P1 " + NfceDraft.HomologationDescription[..20]));
         Assert.Contains(texts, t => t.StartsWith("Desconto R$") && t.EndsWith("2,00"));
         Assert.Contains(texts, t => t.StartsWith("Troco R$") && t.EndsWith("2,00"));
@@ -120,6 +122,76 @@ public sealed class DanfceTests : IDisposable
 
         Assert.All(
             danfce.Lines.Where(l => l.Style is not (DanfceStyle.Centered or DanfceStyle.CenteredBold)),
-            l => Assert.True(l.Text.Length <= Danfce.Columns, $"\"{l.Text}\" has {l.Text.Length} characters"));
+            l => Assert.True(l.Text.Length <= Danfce.DefaultColumns, $"\"{l.Text}\" has {l.Text.Length} characters"));
     }
+
+    [Fact]
+    public async Task Every_line_fits_a_58_mm_roll_when_the_printer_uses_32_columns()
+    {
+        await SaveIssuerAsync();
+        await Kit().PrinterSettings().SaveAsync(ReceiptPrinterSettings.Default with { PrinterName = "Termica", Columns = 32 });
+        var id = await PendingAsync(cpf: "52998224725");
+        await Kit().Prepare().ExecuteAsync(id);
+
+        var danfce = await NewGetDanfce().ExecuteAsync(id);
+
+        Assert.Equal(32, danfce.Width);
+        Assert.All(danfce.Lines, l => Assert.True(l.Text.Length <= 32, $"\"{l.Text}\" has {l.Text.Length} characters"));
+        Assert.Contains(danfce.Lines, l => l.Text.StartsWith("Valor a pagar R$") && l.Text.Length == 32);
+    }
+
+    [Fact]
+    public async Task Printing_needs_a_configured_printer()
+    {
+        await SaveIssuerAsync();
+        var id = await PendingAsync();
+        await Kit().Prepare().ExecuteAsync(id);
+
+        var error = await Assert.ThrowsAsync<DomainException>(() => Kit().PrintDanfce().ExecuteAsync(id));
+
+        Assert.Contains("Impressora", error.Message);
+        Assert.Empty(_printer.Printed);
+    }
+
+    [Fact]
+    public async Task Authorized_sale_is_printed_automatically_when_the_printer_is_set_to()
+    {
+        await SaveIssuerAsync(autoIssue: true);
+        await Kit().PrinterSettings().SaveAsync(ReceiptPrinterSettings.Default with { PrinterName = "Termica", PrintAfterAuthorization = true });
+        _sefaz.Next = Authorized();
+
+        await PendingAsync();
+
+        var (receipt, settings) = Assert.Single(_printer.Printed);
+        Assert.True(receipt.Authorized);
+        Assert.Equal("Termica", settings.PrinterName);
+    }
+
+    [Fact]
+    public async Task Printer_failure_after_authorization_tells_the_cashier_to_reprint()
+    {
+        await SaveIssuerAsync(autoIssue: true);
+        await Kit().PrinterSettings().SaveAsync(ReceiptPrinterSettings.Default with { PrinterName = "Termica", PrintAfterAuthorization = true });
+        _sefaz.Next = Authorized();
+        _printer.FailWith = "Impressora sem papel.";
+
+        var error = await Assert.ThrowsAsync<DomainException>(() => PendingAsync());
+
+        Assert.StartsWith("NFC-e autorizada, mas o cupom não foi impresso: Impressora sem papel.", error.Message);
+    }
+
+    [Fact]
+    public async Task Authorized_sale_is_not_printed_when_automatic_printing_is_off()
+    {
+        await SaveIssuerAsync(autoIssue: true);
+        await Kit().PrinterSettings().SaveAsync(ReceiptPrinterSettings.Default with { PrinterName = "Termica" });
+        _sefaz.Next = Authorized();
+
+        await PendingAsync();
+
+        Assert.Empty(_printer.Printed);
+    }
+
+    private static SefazAnswer Authorized() =>
+        new(SefazOutcome.Authorized, 100, "Autorizado o uso da NF-e", "131260000000001", DateTimeOffset.Now, "<nfeProc>simulated</nfeProc>");
 }
