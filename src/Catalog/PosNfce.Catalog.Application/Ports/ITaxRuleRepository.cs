@@ -6,6 +6,8 @@ public interface ITaxRuleRepository
 {
     Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default);
 
+    Task<TaxRule?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
     Task<bool> NameExistsAsync(string name, CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<TaxRule>> ListAsync(CancellationToken cancellationToken = default);

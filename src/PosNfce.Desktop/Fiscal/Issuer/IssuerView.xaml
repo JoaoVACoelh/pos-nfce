@@ -145,7 +145,7 @@
                 <TextBlock Style="{StaticResource Hint}" Text="Gerados no portal da SEFAZ-MG. Use o CSC de homologação até a loja entrar em produção." />
 
                 <TextBlock Text="Certificado digital A1" Style="{StaticResource SectionTitle}" />
-                <Border Margin="0,8,0,0" Padding="10" BorderThickness="1" BorderBrush="#D9DDE2" Background="White">
+                <Border Style="{StaticResource Card}" Margin="0,8,0,0" Padding="12">
                     <TextBlock x:Name="CertificateStatusText" Text="{Binding CertificateStatus}" TextWrapping="Wrap">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock">
@@ -164,7 +164,7 @@
                     <TextBox x:Name="CertificatePathBox" Text="{Binding CertificatePath}" />
                 </DockPanel>
                 <Label Content="Senha do certificado" Target="{Binding ElementName=CertificatePasswordBox}" />
-                <PasswordBox x:Name="CertificatePasswordBox" PasswordChanged="OnPasswordChanged" Padding="6,5" FontSize="14" />
+                <PasswordBox x:Name="CertificatePasswordBox" PasswordChanged="OnPasswordChanged" />
                 <TextBlock Style="{StaticResource Hint}"
                            Text="O arquivo e a senha ficam criptografados neste computador. Uma cópia do banco levada para outro computador não abre o certificado." />
             </StackPanel>

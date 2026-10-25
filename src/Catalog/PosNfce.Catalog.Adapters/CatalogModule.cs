@@ -24,6 +24,7 @@ public static class CatalogModule
 
         services.AddScoped<RegisterProduct>();
         services.AddScoped<FindProductByBarcode>();
+        services.AddScoped<FindProductForSale>();
         services.AddScoped<ListProducts>();
         services.AddScoped<UpdateProduct>();
         services.AddScoped<SetProductActive>();

@@ -18,6 +18,7 @@
             <TextBlock DockPanel.Dock="Top" Text="Regras tributárias" Style="{StaticResource PageTitle}" />
             <TextBlock DockPanel.Dock="Top" Style="{StaticResource Hint}" Margin="0,0,0,12" TextWrapping="Wrap"
                        Text="Cada regra agrupa os dados fiscais de um tipo de produto. Os valores vêm do contador da loja." />
+            <Border Style="{StaticResource GridFrame}">
             <DataGrid ItemsSource="{Binding TaxRules}" AutoGenerateColumns="False" IsReadOnly="True"
                       HeadersVisibility="Column" GridLinesVisibility="Horizontal">
                 <DataGrid.Columns>
@@ -26,6 +27,7 @@
                     <DataGridTextColumn Header="CSOSN" Binding="{Binding Csosn}" Width="70" />
                 </DataGrid.Columns>
             </DataGrid>
+            </Border>
         </DockPanel>
 
         <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto">

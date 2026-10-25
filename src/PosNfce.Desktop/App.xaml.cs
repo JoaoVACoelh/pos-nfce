@@ -7,12 +7,14 @@ using Microsoft.Extensions.Hosting;
 using PosNfce.Catalog.Adapters;
 using PosNfce.Checkout.Adapters;
 using PosNfce.Desktop.Catalog.Ibpt;
+using PosNfce.Desktop.Checkout;
 using PosNfce.Desktop.Catalog.Products;
 using PosNfce.Desktop.Catalog.TaxRules;
 using PosNfce.Desktop.Fiscal.Issuer;
 using PosNfce.Desktop.Shared;
 using PosNfce.Fiscal.Adapters;
 using PosNfce.Reports.Adapters;
+using PosNfce.SharedKernel;
 
 namespace PosNfce.Desktop;
 
@@ -36,13 +38,15 @@ public partial class App : Application
         {
             services
                 .AddCatalogModule(ConnectionString)
-                .AddCheckoutModule()
+                .AddCheckoutModule(ConnectionString)
                 .AddFiscalModule(ConnectionString)
                 .AddReportsModule();
 
             services.AddSingleton<UseCaseRunner>();
+            services.AddSingleton<IEventPublisher, ServiceProviderEventPublisher>();
             services.AddSingleton<MainViewModel>();
             services.AddSingleton<MainWindow>();
+            services.AddTransient<CheckoutViewModel>();
             services.AddTransient<ProductsViewModel>();
             services.AddTransient<TaxRulesViewModel>();
             services.AddTransient<IssuerViewModel>();
@@ -55,6 +59,7 @@ public partial class App : Application
         UseBrazilianFormats();
         await _host.Services.MigrateCatalogDatabaseAsync();
         await _host.Services.MigrateFiscalDatabaseAsync();
+        await _host.Services.MigrateCheckoutDatabaseAsync();
         await _host.StartAsync();
         _host.Services.GetRequiredService<MainWindow>().Show();
         base.OnStartup(e);

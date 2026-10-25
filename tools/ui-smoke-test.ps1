@@ -31,9 +31,12 @@ function Find($id) {
     throw "element $id not found"
 }
 function FindByName($name) {
-    $e = $script:win.FindFirst($Tree::Descendants, (New-Object $C ($A::NameProperty, $name)))
-    if (-not $e) { throw "element '$name' not found" }
-    return $e
+    for ($i = 0; $i -lt 20; $i++) {
+        $e = $script:win.FindFirst($Tree::Descendants, (New-Object $C ($A::NameProperty, $name)))
+        if ($e) { return $e }
+        Start-Sleep -Milliseconds 200
+    }
+    throw "element '$name' not found"
 }
 function Fill($id, $text) { (Find $id).GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).SetValue($text) }
 function Click($e) { $e.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke(); Start-Sleep -Milliseconds 700 }
@@ -50,7 +53,7 @@ function Shot($name) {
 try {
     $script:win = Wait-Window
     Start-Sleep -Seconds 2
-    Shot "1-products-empty"
+    Shot "1-checkout-empty"
 
     # Tax rule (fictitious values, test database only)
     Click (FindByName "Regras tributárias")
@@ -120,6 +123,51 @@ try {
     Click (FindByName "Emitente")
     "reloaded trade name: $((Find 'TradeNameBox').GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).Current.Value)"
     "reloaded csc field: '$((Find 'CscBox').GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).Current.Value)'"
+
+    # Checkout with the keyboard only (the scanner is a keyboard that types the code and Enter)
+    Click (FindByName "Caixa")
+    (Find "ScanBox").SetFocus()
+    function Keys($keys) { [System.Windows.Forms.SendKeys]::SendWait($keys); Start-Sleep -Milliseconds 600 }
+    Keys "999{ENTER}"                   # unknown code: warning, screen keeps working
+    "checkout unknown: $(Message)"
+    Keys "2*7891234567895{ENTER}"       # 2 x R$ 5,49 = R$ 10,98
+    Keys "{F3}"; Keys "0,98{ENTER}"     # discount -> R$ 10,00
+    "checkout total: $((Find 'TotalText').Current.Name)"
+    Keys "{F2}"                         # payment panel, amount prefilled with what is left
+    Keys "{F7}"; Keys "4{ENTER}"        # R$ 4,00 on the debit card terminal
+    Keys "{F5}"; Keys "10{ENTER}"       # R$ 10,00 in cash
+    "checkout remaining: $((Find 'RemainingText').Current.Name) / $(Message)"
+    Shot "7-checkout-paid"
+    Keys "{ENTER}"                      # close the sale
+    "checkout result: $((Find 'LastSaleText').Current.Name)"
+    Shot "8-checkout-done"
+
+    # Same kind of sale with the mouse: Finish button, PIX button, confirm button
+    Keys "7891234567895{ENTER}"
+    Click (Find "FinishButton")
+    Click (FindByName "PIX")
+    Click (Find "ConfirmPaymentButton")     # adds R$ 5,49 in PIX
+    "mouse sale button: $((Find 'ConfirmPaymentButton').Current.Name)"
+    Click (Find "ConfirmPaymentButton")     # closes the sale
+    "mouse sale result: $((Find 'LastSaleText').Current.Name)"
+
+    # Hamburger slides the side menu closed and open (animated: the items stay in the tree, but off screen)
+    function MenuVisible { ((FindByName "Produtos").Current.BoundingRectangle.Right - $script:win.Current.BoundingRectangle.Left) -gt 100 }
+    Click (Find "MenuToggle")
+    Start-Sleep -Milliseconds 400
+    $menuHidden = -not (MenuVisible)
+    Shot "9-menu-hidden"
+    Click (Find "MenuToggle")
+    Start-Sleep -Milliseconds 400
+    "menu hidden after toggle: $menuHidden; back: $(MenuVisible)"
+
+    # Smallest window size (1000 x 600): the checkout must still be usable
+    $script:win.GetCurrentPattern([System.Windows.Automation.WindowPattern]::Pattern).SetWindowVisualState("Normal")
+    $script:win.GetCurrentPattern([System.Windows.Automation.TransformPattern]::Pattern).Resize(1000, 600)
+    Start-Sleep -Milliseconds 800
+    Keys "7891234567895{ENTER}"
+    Keys "{F2}"
+    Shot "10-small-window"
 }
 finally {
     Stop-Process $proc.Id -Force -ErrorAction SilentlyContinue

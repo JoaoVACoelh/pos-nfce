@@ -10,24 +10,66 @@
         WindowStartupLocation="CenterScreen" WindowState="Maximized"
         Background="{StaticResource PageBrush}">
     <DockPanel>
-        <!-- Side menu -->
-        <Border DockPanel.Dock="Left" Width="200" Background="{StaticResource MenuBrush}">
-            <DockPanel>
-                <StackPanel DockPanel.Dock="Top" Margin="20,24,20,24">
-                    <TextBlock Text="POS NFC-e" Foreground="White" FontSize="20" FontWeight="SemiBold" />
-                    <TextBlock Text="Homologação" Foreground="{StaticResource WarningBrush}" FontSize="12" Margin="0,2,0,0"
-                               ToolTip="Ambiente de testes da SEFAZ: as notas não têm valor fiscal." />
-                </StackPanel>
-                <ItemsControl ItemsSource="{Binding Menu}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Button Content="{Binding Title}" Style="{StaticResource MenuButton}"
-                                    Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                    CommandParameter="{Binding}" />
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+        <!-- Header -->
+        <Border DockPanel.Dock="Top" Height="52" Background="{StaticResource MenuBrush}">
+            <DockPanel LastChildFill="False">
+                <Button x:Name="MenuToggle" DockPanel.Dock="Left" Command="{Binding ToggleMenuCommand}"
+                        Style="{StaticResource HeaderIconButton}" Content="&#xE700;"
+                        AutomationProperties.Name="Mostrar ou esconder o menu" ToolTip="Mostrar ou esconder o menu" />
+                <TextBlock DockPanel.Dock="Left" Text="POS NFC-e" Foreground="White" FontSize="18" FontWeight="SemiBold"
+                           VerticalAlignment="Center" Margin="4,0,12,0" />
+                <Border DockPanel.Dock="Left" Background="{StaticResource WarningBrush}" CornerRadius="10" Padding="10,2"
+                        VerticalAlignment="Center" ToolTip="Ambiente de testes da SEFAZ: as notas não têm valor fiscal.">
+                    <TextBlock Text="HOMOLOGAÇÃO" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource MenuBrush}" />
+                </Border>
+
+                <TextBlock DockPanel.Dock="Right" Text="{Binding Clock}" Foreground="#C9D1DB" FontSize="14"
+                           VerticalAlignment="Center" Margin="16,0,20,0" />
             </DockPanel>
+        </Border>
+
+        <!-- Side menu -->
+        <Border x:Name="SideMenu" DockPanel.Dock="Left" Width="200" Background="{StaticResource MenuBrush}" ClipToBounds="True">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsMenuOpen}" Value="False">
+                            <DataTrigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="Width" To="0" Duration="0:0:0.22">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseInOut" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.EnterActions>
+                            <DataTrigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetProperty="Width" To="200" Duration="0:0:0.22">
+                                            <DoubleAnimation.EasingFunction>
+                                                <CubicEase EasingMode="EaseInOut" />
+                                            </DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </DataTrigger.ExitActions>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <!-- Fixed width inside, so the items slide out of view instead of wrapping while the menu narrows -->
+            <ItemsControl ItemsSource="{Binding Menu}" Margin="0,12,0,0" Width="200" HorizontalAlignment="Right">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Content="{Binding Title}" Style="{StaticResource MenuButton}"
+                                Command="{Binding DataContext.NavigateCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="{Binding}" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
         </Border>
 
         <!-- Current page: App.xaml maps each ViewModel to its View -->
