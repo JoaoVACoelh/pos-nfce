@@ -9,6 +9,12 @@ public sealed class TaxRuleRepository(CatalogDbContext db) : ITaxRuleRepository
     public Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default) =>
         db.TaxRules.AnyAsync(r => r.Id == id, cancellationToken);
 
+    public async Task<TaxRule?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var record = await db.TaxRules.AsNoTracking().SingleOrDefaultAsync(r => r.Id == id, cancellationToken);
+        return record is null ? null : ToDomain(record);
+    }
+
     public Task<bool> NameExistsAsync(string name, CancellationToken cancellationToken = default)
     {
         // SQLite's lower() only folds ASCII letters: "Água" and "ÁGUA" still count as different names.

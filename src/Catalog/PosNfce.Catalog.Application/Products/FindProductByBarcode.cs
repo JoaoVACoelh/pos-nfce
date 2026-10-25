@@ -14,21 +14,28 @@ public sealed class FindProductByBarcode(IProductRepository products)
 {
     public async Task<ProductLookup?> ExecuteAsync(string typed, CancellationToken cancellationToken = default)
     {
+        var product = await FindActiveAsync(products, typed, cancellationToken);
+
+        return product is null
+            ? null
+            : new ProductLookup(product.Id, product.Code, product.Gtin.Value, product.Description, product.Unit, product.Price);
+    }
+
+    internal static async Task<Product?> FindActiveAsync(IProductRepository products, string typed, CancellationToken cancellationToken)
+    {
         var input = typed.Trim();
         if (input.Length == 0)
         {
             return null;
         }
 
-        var product = await FindByGtinAsync(input, cancellationToken)
+        var product = await FindByGtinAsync(products, input, cancellationToken)
             ?? await products.FindByCodeAsync(input, cancellationToken);
 
-        return product is { Active: true }
-            ? new ProductLookup(product.Id, product.Code, product.Gtin.Value, product.Description, product.Unit, product.Price)
-            : null;
+        return product is { Active: true } ? product : null;
     }
 
-    private async Task<Product?> FindByGtinAsync(string input, CancellationToken cancellationToken)
+    private static async Task<Product?> FindByGtinAsync(IProductRepository products, string input, CancellationToken cancellationToken)
     {
         try
         {
