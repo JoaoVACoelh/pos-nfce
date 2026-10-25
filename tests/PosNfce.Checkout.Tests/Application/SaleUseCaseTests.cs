@@ -137,6 +137,24 @@ public sealed class SaleUseCaseTests : IDisposable
         Assert.Equal(0, gateway.Charges);
     }
 
+    [Fact]
+    public async Task Failing_reaction_keeps_the_sale_and_returns_a_warning()
+    {
+        await Scan("7891234567895");
+        await Pay(PaymentMethod.Cash, 10m);
+
+        var completed = await new CompleteSale(Repository(), new FailingPublisher(), TimeProvider.System).ExecuteAsync();
+
+        Assert.Contains("nota fiscal", completed.AfterSaleWarning);
+        Assert.Equal(SaleView.Empty, await new GetCurrentSale(Repository()).ExecuteAsync()); // sale closed anyway
+    }
+
+    private sealed class FailingPublisher : IEventPublisher
+    {
+        public Task PublishAsync<TEvent>(TEvent @event, CancellationToken cancellationToken = default)
+            where TEvent : IDomainEvent => throw new InvalidOperationException("banco indisponível");
+    }
+
     private sealed class CountingGateway : ICardPaymentGateway
     {
         public int Charges { get; private set; }

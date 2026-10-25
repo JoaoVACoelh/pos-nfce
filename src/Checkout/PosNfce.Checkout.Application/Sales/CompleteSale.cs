@@ -5,11 +5,12 @@ using PosNfce.SharedKernel;
 
 namespace PosNfce.Checkout.Application.Sales;
 
-public sealed record CompletedSale(Guid SaleId, decimal Total, decimal Change);
+/// <summary><paramref name="AfterSaleWarning"/>: set when the sale closed but a reaction to it (e.g. the NFC-e) failed.</summary>
+public sealed record CompletedSale(Guid SaleId, decimal Total, decimal Change, string? AfterSaleWarning = null);
 
 /// <summary>
 /// Closes a fully paid sale and publishes <see cref="SaleCompleted"/>. The sale is saved first: if a handler
-/// fails (e.g. SEFAZ offline in Stage 3), the sale stays recorded and Fiscal deals with it.
+/// fails, the sale stays recorded and the cashier is warned, instead of the screen breaking with money already taken.
 /// </summary>
 public sealed class CompleteSale(ISaleRepository sales, IEventPublisher events, TimeProvider clock)
 {
@@ -20,9 +21,19 @@ public sealed class CompleteSale(ISaleRepository sales, IEventPublisher events, 
 
         sale.Complete(now);
         await sales.SaveAsync(sale, cancellationToken);
-        await events.PublishAsync(ToEvent(sale, now), cancellationToken);
 
-        return new CompletedSale(sale.Id, sale.Total.Amount, sale.Change.Amount);
+        string? warning = null;
+        try
+        {
+            await events.PublishAsync(ToEvent(sale, now), cancellationToken);
+        }
+        catch (Exception error) when (error is not OperationCanceledException)
+        {
+            // The customer already paid: the sale can't be undone because of a later step. Stage 4 adds retries.
+            warning = $"A venda foi registrada, mas a nota fiscal não: {error.Message}";
+        }
+
+        return new CompletedSale(sale.Id, sale.Total.Amount, sale.Change.Amount, warning);
     }
 
     private static SaleCompleted ToEvent(Sale sale, DateTimeOffset now) => new(

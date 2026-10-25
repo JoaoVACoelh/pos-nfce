@@ -1,0 +1,78 @@
+using Microsoft.EntityFrameworkCore;
+using PosNfce.Fiscal.Application.Ports;
+using PosNfce.Fiscal.Domain.Documents;
+using PosNfce.SharedKernel;
+
+namespace PosNfce.Fiscal.Adapters.Out.Persistence;
+
+public sealed class FiscalDocumentRepository(FiscalDbContext db) : IFiscalDocumentRepository
+{
+    public Task<bool> ExistsForSaleAsync(Guid saleId, CancellationToken cancellationToken = default) =>
+        db.Documents.AnyAsync(d => d.SaleId == saleId, cancellationToken);
+
+    public async Task AddAsync(FiscalDocument document, CancellationToken cancellationToken = default)
+    {
+        db.Documents.Add(ToRecord(document));
+        await db.SaveChangesAsync(cancellationToken);
+        db.ChangeTracker.Clear();
+    }
+
+    public async Task<IReadOnlyList<FiscalDocument>> ListRecentAsync(int limit, CancellationToken cancellationToken = default)
+    {
+        // Ordered in memory: SQLite stores DateTimeOffset as text, which EF can't order by in SQL.
+        var records = await db.Documents.AsNoTracking().Include(d => d.Items).Include(d => d.Payments).ToListAsync(cancellationToken);
+        return records.OrderByDescending(d => d.SoldAt).Take(limit).Select(ToDomain).ToList();
+    }
+
+    internal static FiscalDocument ToDomain(FiscalDocumentRecord r) => FiscalDocument.Restore(
+        r.Id, r.SaleId, r.SoldAt, (FiscalDocumentStatus)r.Status, r.Series, r.Number,
+        new Money(r.Discount), new Money(r.Change),
+        r.Items.Select(i => new FiscalItem(
+            i.Line, i.Code, i.Gtin, i.Description, i.Unit, i.Quantity, new Money(i.UnitPrice), new Money(i.GrossTotal), new Money(i.Discount),
+            i.Ncm, i.Cest, i.Origin, i.Cfop, i.Csosn, i.PisCst, i.PisRate, i.CofinsCst, i.CofinsRate, i.IbsCbsCst, i.ClassTrib)),
+        r.Payments.Select(p => new FiscalPayment(p.Method, new Money(p.Amount), p.Integrated)));
+
+    private static FiscalDocumentRecord ToRecord(FiscalDocument d) => new()
+    {
+        Id = d.Id,
+        SaleId = d.SaleId,
+        SoldAt = d.SoldAt,
+        Status = (int)d.Status,
+        Series = d.Series,
+        Number = d.Number,
+        Discount = d.Discount.Amount,
+        Total = d.Total.Amount,
+        Change = d.Change.Amount,
+        Items = d.Items.Select(i => new FiscalItemRecord
+        {
+            DocumentId = d.Id,
+            Line = i.Line,
+            Code = i.Code,
+            Gtin = i.Gtin,
+            Description = i.Description,
+            Unit = i.Unit,
+            Quantity = i.Quantity,
+            UnitPrice = i.UnitPrice.Amount,
+            GrossTotal = i.GrossTotal.Amount,
+            Discount = i.Discount.Amount,
+            Ncm = i.Ncm,
+            Cest = i.Cest,
+            Origin = i.Origin,
+            Cfop = i.Cfop,
+            Csosn = i.Csosn,
+            PisCst = i.PisCst,
+            PisRate = i.PisRate,
+            CofinsCst = i.CofinsCst,
+            CofinsRate = i.CofinsRate,
+            IbsCbsCst = i.IbsCbsCst,
+            ClassTrib = i.ClassTrib,
+        }).ToList(),
+        Payments = d.Payments.Select(p => new FiscalPaymentRecord
+        {
+            DocumentId = d.Id,
+            Method = p.Method,
+            Amount = p.Amount.Amount,
+            Integrated = p.Integrated,
+        }).ToList(),
+    };
+}

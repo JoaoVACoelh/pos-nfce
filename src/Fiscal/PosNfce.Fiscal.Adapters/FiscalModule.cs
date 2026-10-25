@@ -1,11 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using PosNfce.Checkout.Application.Contracts;
+using PosNfce.Fiscal.Adapters.In;
 using PosNfce.Fiscal.Adapters.Out.Certificates;
 using PosNfce.Fiscal.Adapters.Out.Persistence;
 using PosNfce.Fiscal.Adapters.Out.Security;
+using PosNfce.Fiscal.Application.Documents;
 using PosNfce.Fiscal.Application.Issuers;
 using PosNfce.Fiscal.Application.Ports;
+using PosNfce.SharedKernel;
 
 namespace PosNfce.Fiscal.Adapters;
 
@@ -20,6 +24,9 @@ public static class FiscalModule
         services.TryAddSingleton(TimeProvider.System);
         services.AddSingleton<ICertificateReader, X509CertificateReader>();
         services.AddScoped<IIssuerRepository, IssuerRepository>();
+        services.AddScoped<IFiscalDocumentRepository, FiscalDocumentRepository>();
+        services.AddScoped<IDocumentNumbering, SqliteDocumentNumbering>();
+        services.AddScoped<IEventHandler<SaleCompleted>, SaleCompletedHandler>();
         if (OperatingSystem.IsWindows())
         {
             services.AddSingleton<ISecretProtector, DpapiSecretProtector>();
@@ -27,6 +34,8 @@ public static class FiscalModule
 
         services.AddScoped<GetIssuer>();
         services.AddScoped<SaveIssuer>();
+        services.AddScoped<RegisterSaleDocument>();
+        services.AddScoped<ListFiscalDocuments>();
 
         return services;
     }
