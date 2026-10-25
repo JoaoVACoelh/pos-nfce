@@ -125,7 +125,7 @@ foreach (var p in products)
     if (existing is { } id)
     {
         await Run<UpdateProduct>($"{label} (updated)", u => u.ExecuteAsync(new UpdateProductCommand(
-            id, p.Description, p.Ncm, Cest: null, p.Unit, p.Price, ProductOrigin.Domestic, rules[p.Rule])));
+            id, gtin, p.Description, p.Ncm, Cest: null, p.Unit, p.Price, ProductOrigin.Domestic, rules[p.Rule])));
     }
     else
     {

@@ -68,7 +68,7 @@
                 <TextBox x:Name="CodeBox" Text="{Binding Code}" IsReadOnly="{Binding IsEditing}" MaxLength="60" />
 
                 <Label Content="Código de barras (GTIN)" Target="{Binding ElementName=GtinBox}" />
-                <TextBox x:Name="GtinBox" Text="{Binding Gtin}" IsReadOnly="{Binding IsEditing}" MaxLength="14"
+                <TextBox x:Name="GtinBox" Text="{Binding Gtin}" MaxLength="14"
                          PreviewKeyDown="OnGtinKeyDown" />
                 <TextBlock Style="{StaticResource Hint}" Text="Leia com o leitor ou deixe vazio se o produto não tem código de barras." />
 

@@ -139,7 +139,7 @@ public sealed partial class ProductsViewModel(UseCaseRunner useCases) : FormView
             if (EditingId is { } id)
             {
                 await useCases.RunAsync<UpdateProduct>(u => u.ExecuteAsync(
-                    new UpdateProductCommand(id, Description, Ncm, Cest, Unit, price, origin, taxRuleId)));
+                    new UpdateProductCommand(id, Gtin, Description, Ncm, Cest, Unit, price, origin, taxRuleId)));
                 await SearchAsync();
                 SelectedProduct = Products.SingleOrDefault(p => p.Id == id);
                 ShowSuccess("Produto atualizado.");

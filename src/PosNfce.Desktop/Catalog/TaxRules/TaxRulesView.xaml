@@ -91,11 +91,11 @@
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0">
-                        <Label Content="CST de IBS/CBS *" Target="{Binding ElementName=IbsCbsCstBox}" />
+                        <Label Content="CST do IBS/CBS *" Target="{Binding ElementName=IbsCbsCstBox}" />
                         <TextBox x:Name="IbsCbsCstBox" Text="{Binding IbsCbsCst}" MaxLength="3" />
                     </StackPanel>
                     <StackPanel Grid.Column="2">
-                        <Label Content="cClassTrib *" Target="{Binding ElementName=ClassTribBox}" />
+                        <Label Content="Classificação tributária (cClassTrib) *" Target="{Binding ElementName=ClassTribBox}" />
                         <TextBox x:Name="ClassTribBox" Text="{Binding ClassTrib}" MaxLength="6" />
                     </StackPanel>
                 </Grid>

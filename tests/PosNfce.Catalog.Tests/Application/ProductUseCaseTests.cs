@@ -73,17 +73,39 @@ public sealed class ProductUseCaseTests : IDisposable
     }
 
     [Fact]
-    public async Task Updated_data_is_saved_but_code_and_gtin_stay()
+    public async Task Updated_data_is_saved_and_the_code_stays()
     {
         var id = await NewRegister().ExecuteAsync(ProductSamples.Command(code: "001", gtin: "7891234567895"));
 
         await NewUpdate().ExecuteAsync(new UpdateProductCommand(
-            id, "Novo nome", "11111111", "0300700", "kg", 15.75m, ProductOrigin.ForeignDirectImport, ProductSamples.TaxRuleId));
+            id, "12345670", "Novo nome", "11111111", "0300700", "kg", 15.75m, ProductOrigin.ForeignDirectImport, ProductSamples.TaxRuleId));
 
         var product = (await NewList().ExecuteAsync(null)).Single();
-        Assert.Equal(("001", "7891234567895"), (product.Code, product.Gtin));
+        Assert.Equal(("001", "12345670"), (product.Code, product.Gtin));
         Assert.Equal(("Novo nome", "11111111", "0300700", "KG", 15.75m), (product.Description, product.Ncm, product.Cest, product.Unit, product.Price));
         Assert.Equal(ProductOrigin.ForeignDirectImport, product.Origin);
+    }
+
+    [Fact]
+    public async Task Gtin_of_another_product_is_refused_on_update()
+    {
+        await NewRegister().ExecuteAsync(ProductSamples.Command(code: "001", gtin: "7891234567895"));
+        var id = await NewRegister().ExecuteAsync(ProductSamples.Command(code: "002", gtin: "12345670"));
+
+        var error = await Assert.ThrowsAsync<DomainException>(() => NewUpdate().ExecuteAsync(new UpdateProductCommand(
+            id, "7891234567895", "Produto", "00000000", null, "UN", 1m, ProductOrigin.Domestic, ProductSamples.TaxRuleId)));
+        Assert.Contains("já é do produto", error.Message);
+    }
+
+    [Fact]
+    public async Task Keeping_the_same_gtin_on_update_is_fine()
+    {
+        var id = await NewRegister().ExecuteAsync(ProductSamples.Command(code: "001", gtin: "7891234567895"));
+
+        await NewUpdate().ExecuteAsync(new UpdateProductCommand(
+            id, "7891234567895", "Outro nome", "00000000", null, "UN", 1m, ProductOrigin.Domestic, ProductSamples.TaxRuleId));
+
+        Assert.Equal("Outro nome", (await NewList().ExecuteAsync(null)).Single().Description);
     }
 
     [Fact]
