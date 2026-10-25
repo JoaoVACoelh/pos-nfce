@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using PosNfce.Catalog.Adapters;
 using PosNfce.Checkout.Adapters;
+using PosNfce.Desktop.Catalog.Ibpt;
 using PosNfce.Desktop.Catalog.Products;
 using PosNfce.Desktop.Catalog.TaxRules;
 using PosNfce.Desktop.Fiscal.Issuer;
@@ -45,6 +46,7 @@ public partial class App : Application
             services.AddTransient<ProductsViewModel>();
             services.AddTransient<TaxRulesViewModel>();
             services.AddTransient<IssuerViewModel>();
+            services.AddTransient<IbptViewModel>();
         })
         .Build();
 

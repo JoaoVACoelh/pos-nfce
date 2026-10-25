@@ -3,7 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:products="clr-namespace:PosNfce.Desktop.Catalog.Products"
              xmlns:taxRules="clr-namespace:PosNfce.Desktop.Catalog.TaxRules"
-             xmlns:issuer="clr-namespace:PosNfce.Desktop.Fiscal.Issuer">
+             xmlns:issuer="clr-namespace:PosNfce.Desktop.Fiscal.Issuer"
+             xmlns:ibpt="clr-namespace:PosNfce.Desktop.Catalog.Ibpt">
     <Application.Resources>
         <!-- Colors -->
         <SolidColorBrush x:Key="PageBrush" Color="#F5F6F8" />
@@ -28,6 +29,9 @@
         </DataTemplate>
         <DataTemplate DataType="{x:Type issuer:IssuerViewModel}">
             <issuer:IssuerView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type ibpt:IbptViewModel}">
+            <ibpt:IbptView />
         </DataTemplate>
 
         <!-- Text -->

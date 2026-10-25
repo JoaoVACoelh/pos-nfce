@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
+using PosNfce.Desktop.Catalog.Ibpt;
 using PosNfce.Desktop.Catalog.Products;
 using PosNfce.Desktop.Catalog.TaxRules;
 using PosNfce.Desktop.Fiscal.Issuer;
@@ -24,6 +25,7 @@ public sealed partial class MainViewModel : ObservableObject
     [
         new("Produtos", typeof(ProductsViewModel)),
         new("Regras tributárias", typeof(TaxRulesViewModel)),
+        new("Tabela IBPT", typeof(IbptViewModel)),
         new("Emitente", typeof(IssuerViewModel)),
     ];
 

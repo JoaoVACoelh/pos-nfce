@@ -1,0 +1,41 @@
+<UserControl x:Class="PosNfce.Desktop.Catalog.Ibpt.IbptView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:local="clr-namespace:PosNfce.Desktop.Catalog.Ibpt"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=local:IbptViewModel}"
+             Loaded="OnLoaded">
+    <StackPanel Margin="24" MaxWidth="720" HorizontalAlignment="Left">
+        <TextBlock Text="Tabela IBPT" Style="{StaticResource PageTitle}" />
+        <TextBlock Style="{StaticResource Hint}" Margin="0,0,0,12"
+                   Text="Valor aproximado dos tributos que aparece no cupom (Lei 12.741/2012). Baixe o arquivo CSV de MG em deolhonoimposto.ibpt.org.br com o CNPJ da loja. Cada tabela tem uma vigência: importe a nova quando a atual vencer." />
+
+        <Border Padding="12" BorderThickness="1" BorderBrush="#D9DDE2" Background="White">
+            <TextBlock x:Name="StatusText" Text="{Binding Status}" TextWrapping="Wrap">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding NeedsAttention}" Value="True">
+                                <Setter Property="Foreground" Value="{StaticResource ErrorBrush}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+        </Border>
+
+        <Label Content="Arquivo CSV da tabela IBPT" Target="{Binding ElementName=FilePathBox}" />
+        <DockPanel>
+            <Button DockPanel.Dock="Right" Content="Escolher..." Click="OnChooseFile" Margin="8,0,0,0" />
+            <TextBox x:Name="FilePathBox" Text="{Binding FilePath}" />
+        </DockPanel>
+
+        <Button Content="Importar" Command="{Binding ImportCommand}" Style="{StaticResource PrimaryButton}"
+                HorizontalAlignment="Left" Margin="0,16,0,0" />
+        <TextBlock x:Name="MessageText" Text="{Binding Message}" Style="{StaticResource FormMessage}" />
+        <TextBlock Style="{StaticResource Hint}" Margin="0,8,0,0"
+                   Text="A importação substitui a tabela anterior. Se o arquivo tiver algum erro, nada é alterado." />
+    </StackPanel>
+</UserControl>

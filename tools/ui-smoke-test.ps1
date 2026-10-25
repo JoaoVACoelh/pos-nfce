@@ -85,6 +85,17 @@ try {
     "row: $($cells -join ' | ')"
     Shot "4-found-by-gtin"
 
+    # IBPT table: fictitious sample file used by the tests
+    $sample = Join-Path $PSScriptRoot "..\tests\PosNfce.Catalog.Tests\TestData\ibpt-sample.csv"
+    Click (FindByName "Tabela IBPT")
+    "ibpt before: $((Find 'StatusText').Current.Name)"
+    Fill "FilePathBox" (Resolve-Path $sample).Path
+    Click (FindByName "Importar")
+    Start-Sleep -Seconds 1
+    "ibpt import: $(Message)"
+    "ibpt after: $((Find 'StatusText').Current.Name)"
+    Shot "5-ibpt"
+
     # Issuer with the development certificate (dotnet run tools/create-dev-certificate.cs), fictitious data
     $certificate = Join-Path $PSScriptRoot "..\data\dev-certificate.pfx"
     Click (FindByName "Emitente")
@@ -102,7 +113,7 @@ try {
     "issuer: $(Message)"
     "certificate: $((Find 'CertificateStatusText').Current.Name)"
     "csc: $((Find 'CscStatusText').Current.Name)"
-    Shot "5-issuer"
+    Shot "6-issuer"
 
     # Leave and come back: data must be reloaded from the database, CSC field empty
     Click (FindByName "Produtos")
