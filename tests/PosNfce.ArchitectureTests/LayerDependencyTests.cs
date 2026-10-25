@@ -65,7 +65,10 @@ public class LayerDependencyTests
     {
         public static Project Load(string name)
         {
-            var path = Path.Combine(RepositoryRoot(), "src", name, $"{name}.csproj");
+            // Module projects live in src/<Module>/; SharedKernel and Desktop sit directly in src/.
+            var module = name.Split('.')[1];
+            var folder = Modules.Contains(module) ? Path.Combine("src", module, name) : Path.Combine("src", name);
+            var path = Path.Combine(RepositoryRoot(), folder, $"{name}.csproj");
             var xml = XDocument.Load(path);
 
             var projects = xml.Descendants("ProjectReference")

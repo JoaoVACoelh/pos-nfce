@@ -1,18 +1,18 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/PosNfce.Catalog.Adapters/PosNfce.Catalog.Adapters.csproj" />
-    <Project Path="src/PosNfce.Catalog.Application/PosNfce.Catalog.Application.csproj" />
-    <Project Path="src/PosNfce.Catalog.Domain/PosNfce.Catalog.Domain.csproj" />
-    <Project Path="src/PosNfce.Checkout.Adapters/PosNfce.Checkout.Adapters.csproj" />
-    <Project Path="src/PosNfce.Checkout.Application/PosNfce.Checkout.Application.csproj" />
-    <Project Path="src/PosNfce.Checkout.Domain/PosNfce.Checkout.Domain.csproj" />
+    <Project Path="src/Catalog/PosNfce.Catalog.Adapters/PosNfce.Catalog.Adapters.csproj" />
+    <Project Path="src/Catalog/PosNfce.Catalog.Application/PosNfce.Catalog.Application.csproj" />
+    <Project Path="src/Catalog/PosNfce.Catalog.Domain/PosNfce.Catalog.Domain.csproj" />
+    <Project Path="src/Checkout/PosNfce.Checkout.Adapters/PosNfce.Checkout.Adapters.csproj" />
+    <Project Path="src/Checkout/PosNfce.Checkout.Application/PosNfce.Checkout.Application.csproj" />
+    <Project Path="src/Checkout/PosNfce.Checkout.Domain/PosNfce.Checkout.Domain.csproj" />
     <Project Path="src/PosNfce.Desktop/PosNfce.Desktop.csproj" />
-    <Project Path="src/PosNfce.Fiscal.Adapters/PosNfce.Fiscal.Adapters.csproj" />
-    <Project Path="src/PosNfce.Fiscal.Application/PosNfce.Fiscal.Application.csproj" />
-    <Project Path="src/PosNfce.Fiscal.Domain/PosNfce.Fiscal.Domain.csproj" />
-    <Project Path="src/PosNfce.Reports.Adapters/PosNfce.Reports.Adapters.csproj" />
-    <Project Path="src/PosNfce.Reports.Application/PosNfce.Reports.Application.csproj" />
-    <Project Path="src/PosNfce.Reports.Domain/PosNfce.Reports.Domain.csproj" />
+    <Project Path="src/Fiscal/PosNfce.Fiscal.Adapters/PosNfce.Fiscal.Adapters.csproj" />
+    <Project Path="src/Fiscal/PosNfce.Fiscal.Application/PosNfce.Fiscal.Application.csproj" />
+    <Project Path="src/Fiscal/PosNfce.Fiscal.Domain/PosNfce.Fiscal.Domain.csproj" />
+    <Project Path="src/Reports/PosNfce.Reports.Adapters/PosNfce.Reports.Adapters.csproj" />
+    <Project Path="src/Reports/PosNfce.Reports.Application/PosNfce.Reports.Application.csproj" />
+    <Project Path="src/Reports/PosNfce.Reports.Domain/PosNfce.Reports.Domain.csproj" />
     <Project Path="src/PosNfce.SharedKernel/PosNfce.SharedKernel.csproj" />
   </Folder>
   <Folder Name="/tests/">

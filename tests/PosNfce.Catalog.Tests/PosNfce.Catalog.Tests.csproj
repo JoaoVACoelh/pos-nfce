@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\PosNfce.Catalog.Adapters\PosNfce.Catalog.Adapters.csproj" />
+    <ProjectReference Include="..\..\src\Catalog\PosNfce.Catalog.Adapters\PosNfce.Catalog.Adapters.csproj" />
   </ItemGroup>
 
 </Project>

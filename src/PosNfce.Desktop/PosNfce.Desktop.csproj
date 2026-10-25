@@ -13,10 +13,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\PosNfce.Catalog.Adapters\PosNfce.Catalog.Adapters.csproj" />
-    <ProjectReference Include="..\PosNfce.Checkout.Adapters\PosNfce.Checkout.Adapters.csproj" />
-    <ProjectReference Include="..\PosNfce.Fiscal.Adapters\PosNfce.Fiscal.Adapters.csproj" />
-    <ProjectReference Include="..\PosNfce.Reports.Adapters\PosNfce.Reports.Adapters.csproj" />
+    <ProjectReference Include="..\Catalog\PosNfce.Catalog.Adapters\PosNfce.Catalog.Adapters.csproj" />
+    <ProjectReference Include="..\Checkout\PosNfce.Checkout.Adapters\PosNfce.Checkout.Adapters.csproj" />
+    <ProjectReference Include="..\Fiscal\PosNfce.Fiscal.Adapters\PosNfce.Fiscal.Adapters.csproj" />
+    <ProjectReference Include="..\Reports\PosNfce.Reports.Adapters\PosNfce.Reports.Adapters.csproj" />
   </ItemGroup>
 
 </Project>
