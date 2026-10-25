@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\PosNfce.SharedKernel\PosNfce.SharedKernel.csproj" />
+  </ItemGroup>
+
+</Project>

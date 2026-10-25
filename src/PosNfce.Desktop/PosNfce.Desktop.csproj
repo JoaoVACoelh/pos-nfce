@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\PosNfce.Catalog.Adapters\PosNfce.Catalog.Adapters.csproj" />
+    <ProjectReference Include="..\PosNfce.Checkout.Adapters\PosNfce.Checkout.Adapters.csproj" />
+    <ProjectReference Include="..\PosNfce.Fiscal.Adapters\PosNfce.Fiscal.Adapters.csproj" />
+    <ProjectReference Include="..\PosNfce.Reports.Adapters\PosNfce.Reports.Adapters.csproj" />
+  </ItemGroup>
+
+</Project>
