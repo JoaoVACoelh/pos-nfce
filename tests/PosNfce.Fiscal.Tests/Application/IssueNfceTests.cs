@@ -150,35 +150,54 @@ public sealed class IssueNfceTests : IDisposable
     }
 
     [Fact]
-    public async Task With_auto_issue_the_sale_is_sent_when_it_closes()
+    public async Task Closing_a_sale_only_registers_the_document_without_waiting_for_sefaz()
     {
         await SaveIssuerAsync(autoIssue: true);
-        _sefaz.Next = Answer(SefazOutcome.Authorized, 100, "Autorizado o uso da NF-e", "131260000000004");
-
-        await NewHandler().HandleAsync(Sale());
-
-        Assert.Equal(FiscalDocumentStatus.Authorized, (await new FiscalDocumentRepository(NewContext()).ListRecentAsync(1)).Single().Status);
-    }
-
-    [Fact]
-    public async Task With_auto_issue_a_rejection_reaches_the_checkout_as_an_error()
-    {
-        await SaveIssuerAsync(autoIssue: true);
-        _sefaz.Next = Answer(SefazOutcome.Rejected, 778, "Informado NCM inexistente");
-
-        var error = await Assert.ThrowsAsync<DomainException>(() => NewHandler().HandleAsync(Sale()));
-
-        Assert.Contains("778", error.Message);
-    }
-
-    [Fact]
-    public async Task Without_auto_issue_the_sale_only_becomes_a_pending_document()
-    {
-        await SaveIssuerAsync(autoIssue: false);
 
         await NewHandler().HandleAsync(Sale());
 
         Assert.Equal(0, _sefaz.Calls);
+        Assert.Equal(FiscalDocumentStatus.Pending, (await new FiscalDocumentRepository(NewContext()).ListRecentAsync(1)).Single().Status);
+    }
+
+    [Fact]
+    public async Task With_auto_issue_the_sale_is_sent_right_after_it_closes()
+    {
+        await SaveIssuerAsync(autoIssue: true);
+        _sefaz.Next = Answer(SefazOutcome.Authorized, 100, "Autorizado o uso da NF-e", "131260000000004");
+        var sale = Sale();
+        await NewHandler().HandleAsync(sale);
+
+        var outcome = await Kit().AutoIssue().ExecuteAsync(sale.SaleId);
+
+        Assert.True(outcome.Sent && outcome.Authorized);
+        Assert.Equal(FiscalDocumentStatus.Authorized, (await new FiscalDocumentRepository(NewContext()).ListRecentAsync(1)).Single().Status);
+    }
+
+    [Fact]
+    public async Task With_auto_issue_a_rejection_comes_back_as_the_outcome()
+    {
+        await SaveIssuerAsync(autoIssue: true);
+        _sefaz.Next = Answer(SefazOutcome.Rejected, 778, "Informado NCM inexistente");
+        var sale = Sale();
+        await NewHandler().HandleAsync(sale);
+
+        var outcome = await Kit().AutoIssue().ExecuteAsync(sale.SaleId);
+
+        Assert.False(outcome.Authorized);
+        Assert.Contains("778", outcome.Message);
+    }
+
+    [Fact]
+    public async Task Without_auto_issue_nothing_is_sent()
+    {
+        await SaveIssuerAsync(autoIssue: false);
+        var sale = Sale();
+        await NewHandler().HandleAsync(sale);
+
+        var outcome = await Kit().AutoIssue().ExecuteAsync(sale.SaleId);
+
+        Assert.Equal((false, 0), (outcome.Sent, _sefaz.Calls));
     }
 
     [Fact]

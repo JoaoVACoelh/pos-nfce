@@ -67,7 +67,9 @@ public sealed class UnimakeNfceIssuer : IFiscalDocumentIssuer
 
     private static SefazAnswer Send(SignedNfce signed, IssuerCertificate certificate, IssuerProfile issuer, bool homologation)
     {
-        using var x509 = X509CertificateLoader.LoadPkcs12(certificate.Pfx, certificate.Password, X509KeyStorageFlags.EphemeralKeySet);
+        // Windows TLS (Schannel) refuses in-memory keys (EphemeralKeySet) for the client certificate; without
+        // PersistKeySet this key file is deleted when the certificate is disposed.
+        using var x509 = X509CertificateLoader.LoadPkcs12(certificate.Pfx, certificate.Password, X509KeyStorageFlags.UserKeySet);
         var state = Enum.Parse<UFBrasil>(issuer.Address.State.Code);
         var configuration = Configuration(x509, homologation ? TipoAmbiente.Homologacao : TipoAmbiente.Producao, state);
 

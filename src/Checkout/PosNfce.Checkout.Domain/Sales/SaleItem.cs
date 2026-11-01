@@ -52,4 +52,18 @@ public sealed class SaleItem
         Quantity = quantity;
         Tax = tax;
     }
+
+    /// <summary>Rules for a new line only: a saved sale must load even if it was sold under other rules.</summary>
+    internal void EnsureSellable()
+    {
+        if (Unit.Equals("UN", StringComparison.OrdinalIgnoreCase) && decimal.Truncate(Quantity) != Quantity)
+        {
+            throw new DomainException($"\"{Description}\" é vendido por unidade: a quantidade deve ser um número inteiro.");
+        }
+
+        if (Total == Money.Zero)
+        {
+            throw new DomainException($"Quantidade pequena demais: \"{Description}\" ficaria em {Money.Zero}. Confira o peso.");
+        }
+    }
 }

@@ -55,6 +55,30 @@ public class FiscalDocumentTests
     }
 
     [Fact]
+    public void Line_removed_from_the_sale_leaves_no_gap_in_the_document()
+    {
+        var document = FiscalDocument.FromSale(
+            Guid.NewGuid(), DateTimeOffset.Now,
+            [Item(2, 10m), Item(3, 20m), Item(5, 30m)], Money.Zero, new Money(60m), Money.Zero,
+            [new FiscalPayment("Cash", new Money(60m), false)]);
+
+        Assert.Equal([1, 2, 3], document.Items.Select(i => i.Line));
+        Assert.Equal(["P2", "P3", "P5"], document.Items.Select(i => i.Code));
+    }
+
+    [Fact]
+    public void Document_saved_with_a_gap_is_renumbered_when_restored()
+    {
+        // Rejected with cStat 927 before the fix: sending it again must fix the sequence.
+        var document = FiscalDocument.Restore(
+            Guid.NewGuid(), Guid.NewGuid(), DateTimeOffset.Now, FiscalDocumentStatus.Rejected, 2, 10, Money.Zero, Money.Zero,
+            [Item(4, 30m), Item(1, 10m), Item(3, 20m)], [new FiscalPayment("Cash", new Money(60m), false)]);
+
+        Assert.Equal([1, 2, 3], document.Items.Select(i => i.Line));
+        Assert.Equal(["P1", "P3", "P4"], document.Items.Select(i => i.Code));
+    }
+
+    [Fact]
     public void Sale_total_that_does_not_match_the_items_is_rejected()
     {
         Assert.Throws<DomainException>(() => FiscalDocument.FromSale(

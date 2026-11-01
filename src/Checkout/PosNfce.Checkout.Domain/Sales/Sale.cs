@@ -72,6 +72,7 @@ public sealed class Sale
 
         var line = _items.Count == 0 ? 1 : _items.Max(i => i.Line) + 1;
         var item = new SaleItem(Guid.NewGuid(), line, productId, code, gtin, description, unit, unitPrice, quantity, tax);
+        item.EnsureSellable();
         _items.Add(item);
         return item;
     }
@@ -109,6 +110,9 @@ public sealed class Sale
         Discount = discount;
     }
 
+    /// <summary>The largest change a cash payment can leave.</summary>
+    public static readonly Money MaxChange = new(1_000m);
+
     /// <summary>Checks a payment before charging it on the terminal, so a payment the sale would refuse is never charged.</summary>
     public void CheckPayment(PaymentMethod method, Money amount)
     {
@@ -128,6 +132,12 @@ public sealed class Sale
         if (method != PaymentMethod.Cash && amount > Remaining)
         {
             throw new DomainException($"Pagamento em cartão ou PIX não pode passar do que falta ({Remaining}).");
+        }
+
+        // A barcode read in the amount field would otherwise become a payment of trillions.
+        if (amount > Remaining + MaxChange)
+        {
+            throw new DomainException($"Valor alto demais: o troco passaria de {MaxChange}. Confira o valor digitado.");
         }
 
         // Throwaway instance: runs the amount checks (positive, two decimals) that live in Payment.
@@ -164,7 +174,7 @@ public sealed class Sale
 
         if (CustomerCpf is null && cpfRequiredFrom is { } limit && Total >= limit)
         {
-            throw new DomainException($"Venda de {limit} ou mais: a lei exige o CPF do cliente na nota. Informe o CPF (F10) e conclua de novo.");
+            throw new DomainException($"Venda de {limit} ou mais: tecle F10 e informe o CPF.");
         }
 
         Status = SaleStatus.Completed;

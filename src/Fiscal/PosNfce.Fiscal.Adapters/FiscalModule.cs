@@ -54,6 +54,10 @@ public static class FiscalModule
         services.AddScoped<GetDanfce>();
         services.AddScoped<GetConsumerIdentificationLimit>();
         services.AddScoped<PrintDanfce>();
+        services.AddScoped<GetSaleNfce>();
+        services.AddScoped<CountUnsentNfce>();
+        services.AddScoped<AutoIssueSaleNfce>();
+        services.AddScoped<PrintSaleNfce>();
         services.AddScoped<PrintTestPage>();
         services.AddScoped<GetReceiptPrinterSettings>();
         services.AddScoped<SaveReceiptPrinterSettings>();

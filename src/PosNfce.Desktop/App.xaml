@@ -315,15 +315,24 @@
             The text keeps its color, so it stays readable on white and on blue buttons.
         -->
         <ControlTemplate x:Key="SoftButtonTemplate" TargetType="Button">
-            <Border x:Name="Frame" CornerRadius="6" Background="{TemplateBinding Background}"
-                    BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
-                <Grid>
-                    <Border x:Name="Overlay" CornerRadius="5" Background="#000000" Opacity="0" />
-                    <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                      VerticalAlignment="Center" />
-                </Grid>
-            </Border>
+            <Grid>
+                <!-- Ring around the button when its Tag is "Selected": the option Enter runs (keyboard navigation) -->
+                <Border x:Name="Ring" Margin="-4" CornerRadius="9" BorderThickness="2" BorderBrush="{StaticResource AccentBrush}"
+                        Visibility="Collapsed" IsHitTestVisible="False" />
+                <Border x:Name="Frame" CornerRadius="6" Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                    <Grid>
+                        <Border x:Name="Overlay" CornerRadius="5" Background="#000000" Opacity="0" />
+                        <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="Center" />
+                    </Grid>
+                </Border>
+            </Grid>
             <ControlTemplate.Triggers>
+                <Trigger Property="Tag" Value="Selected">
+                    <Setter TargetName="Ring" Property="Visibility" Value="Visible" />
+                    <Setter TargetName="Frame" Property="BorderBrush" Value="{StaticResource AccentBrush}" />
+                </Trigger>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Trigger.EnterActions>
                         <BeginStoryboard>
@@ -529,14 +538,15 @@
             <Setter Property="FontSize" Value="15" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Focusable" Value="False" />
-            <Setter Property="Margin" Value="0,0,8,8" />
+            <Setter Property="Margin" Value="0,0,0,6" />
             <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border x:Name="Back" Background="White" BorderBrush="{StaticResource InputBorderBrush}" BorderThickness="1"
-                                CornerRadius="10" Padding="10,10">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                CornerRadius="10" Padding="14,10">
+                            <ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="Center" />
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">

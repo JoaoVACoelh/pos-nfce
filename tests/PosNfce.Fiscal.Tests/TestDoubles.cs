@@ -70,6 +70,8 @@ internal sealed class FiscalTestKit(Func<FiscalDbContext> newContext, string xml
 
     public PrintDanfce PrintDanfce() => new(GetDanfce(), PrinterSettings(), Printer);
 
+    public PrintSaleNfce PrintSaleNfce() => new(new FiscalDocumentRepository(newContext()), Issue(), PrintDanfce());
+
     public IssuerRepository Issuers() => new(newContext(), new DpapiSecretProtector());
 
     public PrepareNfceXml Prepare(TimeProvider? clock = null, IApproximateTaxRates? rates = null) => new(
@@ -80,6 +82,8 @@ internal sealed class FiscalTestKit(Func<FiscalDbContext> newContext, string xml
     public IssueNfce Issue() =>
         new(Prepare(), new FiscalDocumentRepository(newContext()), Issuers(), Sefaz, new FileXmlStore(xmlFolder));
 
-    public SaleCompletedHandler Handler() =>
-        new(new RegisterSaleDocument(new FiscalDocumentRepository(newContext())), Issuers(), Issue(), PrinterSettings(), PrintDanfce());
+    public SaleCompletedHandler Handler() => new(new RegisterSaleDocument(new FiscalDocumentRepository(newContext())));
+
+    public AutoIssueSaleNfce AutoIssue() =>
+        new(new FiscalDocumentRepository(newContext()), Issuers(), Issue(), PrinterSettings(), PrintDanfce());
 }

@@ -28,6 +28,8 @@ public static class EscPosReceipt
             Write(Esc, (byte)'t', table);
         }
 
+        Write(LineFeed); // the paper starts moving here: a first line printed at once came out cut in half on an Elgin i8
+
         var encoding = TextEncoding(settings.CodePage);
         foreach (var line in receipt.Lines)
         {

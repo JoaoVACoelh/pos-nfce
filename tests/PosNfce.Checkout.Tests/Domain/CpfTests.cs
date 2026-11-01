@@ -23,4 +23,13 @@ public class CpfTests
     {
         Assert.Throws<DomainException>(() => Cpf.Parse(input));
     }
+
+    [Theory]
+    [InlineData("111.111.111-11", "confira os números")]
+    [InlineData("529.982.247-26", "confira os números")]
+    [InlineData("5299822472", "11 dígitos")]
+    public void Refusal_says_what_is_wrong(string input, string expected)
+    {
+        Assert.Contains(expected, Assert.Throws<DomainException>(() => Cpf.Parse(input)).Message);
+    }
 }

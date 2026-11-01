@@ -22,7 +22,8 @@ if (args.Length != 1 || !File.Exists(args[0]))
 Console.Write("Certificate password: ");
 var password = ReadPassword();
 
-using var certificate = X509CertificateLoader.LoadPkcs12(File.ReadAllBytes(args[0]), password, X509KeyStorageFlags.EphemeralKeySet);
+// Windows TLS (Schannel) refuses in-memory keys (EphemeralKeySet); without PersistKeySet the key file goes away on dispose.
+using var certificate = X509CertificateLoader.LoadPkcs12(File.ReadAllBytes(args[0]), password, X509KeyStorageFlags.UserKeySet);
 Console.WriteLine($"Certificate: {certificate.Subject} (valid until {certificate.NotAfter:dd/MM/yyyy})");
 
 var configuration = new Configuracao

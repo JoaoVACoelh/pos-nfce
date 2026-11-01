@@ -161,21 +161,16 @@ try {
     "checkout cpf: $((Find 'CustomerCpfText').Current.Name)"
     Keys "{F2}"                         # payment panel, amount prefilled with what is left
     Keys "{F7}"; Keys "4{ENTER}"        # R$ 4,00 on the debit card terminal
-    Keys "{F5}"; Keys "10{ENTER}"       # R$ 10,00 in cash
-    "checkout remaining: $((Find 'RemainingText').Current.Name) / $(Message)"
-    Shot "7-checkout-paid"
-    Keys "{ENTER}"                      # close the sale
-    "checkout result: $((Find 'LastSaleText').Current.Name)"
+    Keys "{F5}"; Keys "10{ENTER}"       # R$ 10,00 in cash: settles the total and closes the sale
+    "checkout result: $((Find 'LastSaleText').Current.Name) $((Find 'LastChangeText').Current.Name) | $((Find 'NfceStatusText').Current.Name) | button: $((Find 'PrintNfceButton').Current.Name)"
     Shot "8-checkout-done"
 
     # Same kind of sale with the mouse: Finish button, PIX button, confirm button
     Keys "7891234567895{ENTER}"
     Click (Find "FinishButton")
     Click (FindByName "PIX")
-    Click (Find "ConfirmPaymentButton")     # adds R$ 5,49 in PIX
-    "mouse sale button: $((Find 'ConfirmPaymentButton').Current.Name)"
-    Click (Find "ConfirmPaymentButton")     # closes the sale
-    "mouse sale result: $((Find 'LastSaleText').Current.Name)"
+    Click (Find "ConfirmPaymentButton")     # R$ 5,49 in PIX settles the total and closes the sale
+    "mouse sale result: $((Find 'LastSaleText').Current.Name) | $((Find 'NfceStatusText').Current.Name)"
 
     # Both sales became pending NFC-e documents
     Click (FindByName "Notas fiscais")
@@ -241,9 +236,19 @@ try {
     $script:win.GetCurrentPattern([System.Windows.Automation.WindowPattern]::Pattern).SetWindowVisualState("Normal")
     $script:win.GetCurrentPattern([System.Windows.Automation.TransformPattern]::Pattern).Resize(1000, 600)
     Start-Sleep -Milliseconds 800
+    # ...and works with arrows + Enter only
     Keys "7891234567895{ENTER}"
-    Keys "{F2}"
+    Shot "10a-small-actions"            # "Finalizar venda" highlighted
+    Keys "{RIGHT}{RIGHT}{ENTER}"        # empty field: -> -> highlights "CPF na nota", Enter opens it
+    "keyboard cpf field open: $(-not (Find 'CpfBox').Current.IsOffscreen)"
+    Keys "{ESC}"
+    Keys "{LEFT}{LEFT}{ENTER}"          # back to "Finalizar venda": Enter opens the payment
+    Keys "{DOWN}{DOWN}"                 # down arrow in the amount field picks the method: Dinheiro -> Credito -> Debito
+    "keyboard payment method: $((Find 'PaymentMethodText').Current.Name)"
     Shot "10-small-window"
+    Keys "{ENTER}"                      # pays the amount prefilled and closes the sale: the card must fit the narrow window
+    Keys "{RIGHT}"                      # highlights "Tentar de novo" (not pressed: it would call SEFAZ)
+    Shot "10c-small-done"
 }
 finally {
     Stop-Process $proc.Id -Force -ErrorAction SilentlyContinue

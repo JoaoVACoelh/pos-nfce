@@ -1,25 +1,18 @@
 using PosNfce.Checkout.Application.Contracts;
 using PosNfce.Fiscal.Application.Documents;
-using PosNfce.Fiscal.Application.Ports;
-using PosNfce.Fiscal.Application.Printing;
 using PosNfce.SharedKernel;
 
 namespace PosNfce.Fiscal.Adapters.In;
 
 /// <summary>
 /// Inbound adapter: translates Checkout's <see cref="SaleCompleted"/> into Fiscal's own command, so Fiscal's
-/// application layer never depends on Checkout. When the issuer has automatic issuing on, the NFC-e is sent right away;
-/// if it isn't authorized, the exception carries the reason and the checkout shows it to the cashier. Once authorized, the
-/// DANFCE is printed when the printer is set to print automatically.
+/// application layer never depends on Checkout. It only registers the pending NFC-e: sending it to SEFAZ
+/// (<see cref="AutoIssueSaleNfce"/>) runs afterwards, so the checkout never waits for SEFAZ to close a sale.
 /// </summary>
-public sealed class SaleCompletedHandler(
-    RegisterSaleDocument registerDocument, IIssuerRepository issuers, IssueNfce issueNfce,
-    IReceiptPrinterSettingsStore printerSettings, PrintDanfce printDanfce)
-    : IEventHandler<SaleCompleted>
+public sealed class SaleCompletedHandler(RegisterSaleDocument registerDocument) : IEventHandler<SaleCompleted>
 {
-    public async Task HandleAsync(SaleCompleted sale, CancellationToken cancellationToken = default)
-    {
-        var documentId = await registerDocument.ExecuteAsync(new RegisterSaleDocumentCommand(
+    public async Task HandleAsync(SaleCompleted sale, CancellationToken cancellationToken = default) =>
+        await registerDocument.ExecuteAsync(new RegisterSaleDocumentCommand(
             sale.SaleId,
             sale.OccurredAt,
             sale.Discount,
@@ -31,30 +24,4 @@ public sealed class SaleCompletedHandler(
             sale.Payments.Select(p => new SaleDocumentPayment(p.Method, p.Amount, p.Integrated)).ToList(),
             sale.CustomerCpf),
             cancellationToken);
-
-        if (documentId is null || (await issuers.GetAsync(cancellationToken))?.AutoIssue != true)
-        {
-            return;
-        }
-
-        var result = await issueNfce.ExecuteAsync(documentId.Value, cancellationToken);
-        if (!result.Authorized)
-        {
-            throw new DomainException(result.Message);
-        }
-
-        if (!(await printerSettings.GetAsync(cancellationToken)).PrintAfterAuthorization)
-        {
-            return;
-        }
-
-        try
-        {
-            await printDanfce.ExecuteAsync(documentId.Value, cancellationToken);
-        }
-        catch (DomainException error)
-        {
-            throw new DomainException($"NFC-e autorizada, mas o cupom não foi impresso: {error.Message} Reimprima em \"Notas fiscais\".");
-        }
-    }
 }

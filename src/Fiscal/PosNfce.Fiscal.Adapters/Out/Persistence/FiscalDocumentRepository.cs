@@ -13,6 +13,10 @@ public sealed class FiscalDocumentRepository(FiscalDbContext db) : IFiscalDocume
     public Task<bool> AnyNumberedAsync(CancellationToken cancellationToken = default) =>
         db.Documents.AnyAsync(d => d.Number != null, cancellationToken);
 
+    public Task<int> CountUnsentAsync(CancellationToken cancellationToken = default) =>
+        db.Documents.CountAsync(
+            d => d.Status == (int)FiscalDocumentStatus.Pending || d.Status == (int)FiscalDocumentStatus.Rejected, cancellationToken);
+
     public async Task AddAsync(FiscalDocument document, CancellationToken cancellationToken = default)
     {
         db.Documents.Add(ToRecord(document));
@@ -24,6 +28,13 @@ public sealed class FiscalDocumentRepository(FiscalDbContext db) : IFiscalDocume
     {
         var record = await db.Documents.AsNoTracking().Include(d => d.Items).Include(d => d.Payments)
             .SingleOrDefaultAsync(d => d.Id == id, cancellationToken);
+        return record is null ? null : ToDomain(record);
+    }
+
+    public async Task<FiscalDocument?> FindBySaleAsync(Guid saleId, CancellationToken cancellationToken = default)
+    {
+        var record = await db.Documents.AsNoTracking().Include(d => d.Items).Include(d => d.Payments)
+            .SingleOrDefaultAsync(d => d.SaleId == saleId, cancellationToken);
         return record is null ? null : ToDomain(record);
     }
 

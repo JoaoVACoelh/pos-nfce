@@ -1,4 +1,5 @@
 using PosNfce.Catalog.Application.Ports;
+using PosNfce.Catalog.Domain.Products;
 
 namespace PosNfce.Catalog.Application.Products;
 
@@ -32,11 +33,11 @@ public sealed class FindProductForSale(IProductRepository products, ITaxRuleRepo
     public async Task<ProductForSale?> ExecuteAsync(string typed, CancellationToken cancellationToken = default)
     {
         var product = await FindProductByBarcode.FindActiveAsync(products, typed, cancellationToken);
-        if (product is null)
-        {
-            return null;
-        }
+        return product is null ? null : await ToSaleAsync(product, taxRules, cancellationToken);
+    }
 
+    internal static async Task<ProductForSale> ToSaleAsync(Product product, ITaxRuleRepository taxRules, CancellationToken cancellationToken)
+    {
         var rule = await taxRules.FindByIdAsync(product.TaxRuleId, cancellationToken)
             ?? throw new InvalidOperationException($"Tax rule {product.TaxRuleId} of product {product.Code} not found.");
 

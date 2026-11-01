@@ -32,6 +32,12 @@ public sealed class ProductUseCaseTests : IDisposable
 
     private FindProductByBarcode NewFind() => new(new ProductRepository(_database.NewContext()));
 
+    private FindProductForSaleByScaleCode NewFindByScaleCode()
+    {
+        var db = _database.NewContext();
+        return new(new ProductRepository(db), new TaxRuleRepository(db));
+    }
+
     private ListProducts NewList()
     {
         var db = _database.NewContext();
@@ -141,6 +147,42 @@ public sealed class ProductUseCaseTests : IDisposable
 
         Assert.NotNull(found);
         Assert.Equal("SEM GTIN", found.Gtin);
+    }
+
+    [Theory]
+    [InlineData("000005")]
+    [InlineData("00005")]
+    [InlineData("5")]
+    public async Task Scale_code_matches_the_internal_code_with_or_without_leading_zeros(string code)
+    {
+        await NewRegister().ExecuteAsync(ProductSamples.Command(code: code, gtin: null));
+
+        var found = await NewFindByScaleCode().ExecuteAsync(5);
+
+        Assert.Equal(code, found?.Code);
+        Assert.Equal("5102", found?.Cfop);
+    }
+
+    [Fact]
+    public async Task Scale_code_ignores_other_codes_and_inactive_products()
+    {
+        await NewRegister().ExecuteAsync(ProductSamples.Command(code: "50", gtin: null));
+        await NewRegister().ExecuteAsync(ProductSamples.Command(code: "PAO-5", gtin: null));
+        var inactive = await NewRegister().ExecuteAsync(ProductSamples.Command(code: "005", gtin: null));
+        await new SetProductActive(new ProductRepository(_database.NewContext())).ExecuteAsync(inactive, active: false);
+
+        Assert.Null(await NewFindByScaleCode().ExecuteAsync(5));
+    }
+
+    [Fact]
+    public async Task Two_active_products_with_the_same_scale_code_are_reported()
+    {
+        await NewRegister().ExecuteAsync(ProductSamples.Command(code: "5", gtin: null));
+        await NewRegister().ExecuteAsync(ProductSamples.Command(code: "000005", gtin: null));
+
+        var error = await Assert.ThrowsAsync<DomainException>(() => NewFindByScaleCode().ExecuteAsync(5));
+
+        Assert.Contains("mesmo código de balança", error.Message);
     }
 
     [Fact]

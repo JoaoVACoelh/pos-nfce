@@ -10,6 +10,9 @@ public interface IProductRepository
 
     Task<Product?> FindByCodeAsync(string code, CancellationToken cancellationToken = default);
 
+    /// <summary>Products, active or not, whose code is one of <paramref name="codes"/>.</summary>
+    Task<IReadOnlyList<Product>> FindByCodesAsync(IReadOnlyCollection<string> codes, CancellationToken cancellationToken = default);
+
     /// <summary>Products whose code, GTIN or description contains <paramref name="term"/>; all when it is empty.</summary>
     Task<IReadOnlyList<Product>> SearchAsync(string? term, int limit, CancellationToken cancellationToken = default);
 

@@ -97,7 +97,8 @@ public sealed class FiscalDocument
         Number = number;
         Discount = discount;
         Change = change;
-        _items = items.OrderBy(i => i.Line).ToList();
+        // A line removed from the sale leaves a gap, and SEFAZ refuses nItem out of sequence (cStat 927).
+        _items = items.OrderBy(i => i.Line).Select((item, index) => item with { Line = index + 1 }).ToList();
         _payments = payments.ToList();
     }
 

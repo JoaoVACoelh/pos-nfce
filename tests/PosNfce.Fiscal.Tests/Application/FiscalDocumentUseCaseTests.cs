@@ -71,6 +71,15 @@ public sealed class FiscalDocumentUseCaseTests : IDisposable
     }
 
     [Fact]
+    public async Task Pending_documents_count_as_unsent()
+    {
+        await NewHandler().HandleAsync(Sale());
+        await NewHandler().HandleAsync(Sale());
+
+        Assert.Equal(2, await new CountUnsentNfce(new FiscalDocumentRepository(NewContext())).ExecuteAsync());
+    }
+
+    [Fact]
     public async Task Same_sale_received_twice_creates_one_document()
     {
         var sale = Sale();

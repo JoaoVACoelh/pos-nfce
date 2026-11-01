@@ -47,10 +47,10 @@ public sealed class DanfceTests : IDisposable
             "3106200", "MG", "30110000", null, 1, 1, "1", "TESTE0123456789ABCDEF",
             TestCertificates.Create("11222333000181", DateTimeOffset.Now.AddYears(1)), TestCertificates.Password, autoIssue));
 
-    private async Task<Guid> PendingAsync(string? cpf = null)
+    private async Task<Guid> PendingAsync(string? cpf = null, Guid? saleId = null)
     {
         await Kit().Handler().HandleAsync(new SaleCompleted(
-            Guid.NewGuid(), DateTimeOffset.Now, 20m, 2m, 18m, 2m,
+            saleId ?? Guid.NewGuid(), DateTimeOffset.Now, 20m, 2m, 18m, 2m,
             [new SoldItem(1, Guid.NewGuid(), "P1", "SEM GTIN", "Refrigerante lata 350ml", "UN", 2m, 10m, 20m,
                 "22021000", null, 0, "5102", "102", "49", 0m, "49", 0m, "000", "000001", 0m)],
             [new ReceivedPayment("Cash", 20m, false)],
@@ -159,8 +159,10 @@ public sealed class DanfceTests : IDisposable
         await SaveIssuerAsync(autoIssue: true);
         await Kit().PrinterSettings().SaveAsync(ReceiptPrinterSettings.Default with { PrinterName = "Termica", PrintAfterAuthorization = true });
         _sefaz.Next = Authorized();
+        var saleId = Guid.NewGuid();
+        await PendingAsync(saleId: saleId);
 
-        await PendingAsync();
+        await Kit().AutoIssue().ExecuteAsync(saleId);
 
         var (receipt, settings) = Assert.Single(_printer.Printed);
         Assert.True(receipt.Authorized);
@@ -168,16 +170,19 @@ public sealed class DanfceTests : IDisposable
     }
 
     [Fact]
-    public async Task Printer_failure_after_authorization_tells_the_cashier_to_reprint()
+    public async Task Printer_failure_after_automatic_authorization_is_reported_without_losing_the_authorization()
     {
         await SaveIssuerAsync(autoIssue: true);
         await Kit().PrinterSettings().SaveAsync(ReceiptPrinterSettings.Default with { PrinterName = "Termica", PrintAfterAuthorization = true });
         _sefaz.Next = Authorized();
         _printer.FailWith = "Impressora sem papel.";
+        var saleId = Guid.NewGuid();
+        await PendingAsync(saleId: saleId);
 
-        var error = await Assert.ThrowsAsync<DomainException>(() => PendingAsync());
+        var outcome = await Kit().AutoIssue().ExecuteAsync(saleId);
 
-        Assert.StartsWith("NFC-e autorizada, mas o cupom não foi impresso: Impressora sem papel.", error.Message);
+        Assert.True(outcome.Authorized && outcome.PrintFailed);
+        Assert.Equal("NFC-e autorizada, mas o cupom não foi impresso: Impressora sem papel.", outcome.Message);
     }
 
     [Fact]
@@ -186,10 +191,61 @@ public sealed class DanfceTests : IDisposable
         await SaveIssuerAsync(autoIssue: true);
         await Kit().PrinterSettings().SaveAsync(ReceiptPrinterSettings.Default with { PrinterName = "Termica" });
         _sefaz.Next = Authorized();
+        var saleId = Guid.NewGuid();
+        await PendingAsync(saleId: saleId);
 
-        await PendingAsync();
+        var outcome = await Kit().AutoIssue().ExecuteAsync(saleId);
 
+        Assert.True(outcome.Authorized);
         Assert.Empty(_printer.Printed);
+    }
+
+    [Fact]
+    public async Task Print_from_the_checkout_issues_a_pending_sale_first_and_prints_it_once_authorized()
+    {
+        await SaveIssuerAsync();
+        await Kit().PrinterSettings().SaveAsync(ReceiptPrinterSettings.Default with { PrinterName = "Termica" });
+        var saleId = Guid.NewGuid();
+        await PendingAsync(saleId: saleId);
+        _sefaz.Next = Authorized();
+
+        var result = await Kit().PrintSaleNfce().ExecuteAsync(saleId);
+
+        Assert.True(result.Printed);
+        Assert.Equal("NFC-e 1-1 autorizada e impressa.", result.Message);
+        Assert.True(Assert.Single(_printer.Printed).Receipt.Authorized);
+    }
+
+    [Fact]
+    public async Task Print_from_the_checkout_prints_nothing_when_sefaz_does_not_authorize()
+    {
+        await SaveIssuerAsync();
+        await Kit().PrinterSettings().SaveAsync(ReceiptPrinterSettings.Default with { PrinterName = "Termica" });
+        var saleId = Guid.NewGuid();
+        await PendingAsync(saleId: saleId);
+        _sefaz.Next = new SefazAnswer(SefazOutcome.Rejected, 225, "Falha no Schema XML", null, null, null);
+
+        var result = await Kit().PrintSaleNfce().ExecuteAsync(saleId);
+
+        Assert.False(result.Printed);
+        Assert.Contains("rejeitada", result.Message);
+        Assert.Empty(_printer.Printed);
+    }
+
+    [Fact]
+    public async Task Print_from_the_checkout_does_not_send_an_authorized_sale_again()
+    {
+        await SaveIssuerAsync(autoIssue: true);
+        await Kit().PrinterSettings().SaveAsync(ReceiptPrinterSettings.Default with { PrinterName = "Termica" });
+        var saleId = Guid.NewGuid();
+        _sefaz.Next = Authorized();
+        await PendingAsync(saleId: saleId);
+        await Kit().AutoIssue().ExecuteAsync(saleId);
+
+        var result = await Kit().PrintSaleNfce().ExecuteAsync(saleId);
+
+        Assert.Equal((true, "Nota impressa.", 1), (result.Printed, result.Message, _sefaz.Calls));
+        Assert.Single(_printer.Printed);
     }
 
     private static SefazAnswer Authorized() =>

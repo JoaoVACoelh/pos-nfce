@@ -15,7 +15,7 @@ public class SaleTests
         var sale = Sale.Open(Now);
         foreach (var (price, quantity) in items)
         {
-            sale.AddItem(Guid.NewGuid(), "001", "SEM GTIN", "Produto", "UN", new Money(price), quantity, Tax);
+            sale.AddItem(Guid.NewGuid(), "001", "SEM GTIN", "Produto", "KG", new Money(price), quantity, Tax);
         }
 
         return sale;
@@ -28,6 +28,17 @@ public class SaleTests
         var sale = SaleWith((12.90m, 0.350m));
 
         Assert.Equal(new Money(4.52m), sale.Items[0].Total);
+    }
+
+    [Fact]
+    public void Cash_change_has_a_limit()
+    {
+        var sale = SaleWith((10m, 1));
+
+        Assert.Throws<DomainException>(() => sale.AddPayment(PaymentMethod.Cash, new Money(1_010.01m)));
+
+        sale.AddPayment(PaymentMethod.Cash, new Money(1_010m));
+        Assert.Equal(new Money(1_000m), sale.Change);
     }
 
     [Fact]
@@ -118,6 +129,49 @@ public class SaleTests
     }
 
     [Fact]
+    public void Product_sold_by_unit_refuses_a_fraction()
+    {
+        var sale = Sale.Open(Now);
+
+        var error = Assert.Throws<DomainException>(() => sale.AddItem(Guid.NewGuid(), "1", "SEM GTIN", "Refrigerante", "UN", new Money(5m), 0.5m, Tax));
+
+        Assert.Contains("por unidade", error.Message);
+        Assert.Empty(sale.Items);
+    }
+
+    [Fact]
+    public void Product_sold_by_unit_accepts_whole_quantities_written_with_decimals()
+    {
+        var sale = Sale.Open(Now);
+
+        sale.AddItem(Guid.NewGuid(), "1", "SEM GTIN", "Refrigerante", "un", new Money(5m), 2.000m, Tax);
+
+        Assert.Equal(new Money(10m), sale.Total);
+    }
+
+    [Fact]
+    public void Item_that_rounds_to_zero_is_refused()
+    {
+        var sale = Sale.Open(Now);
+
+        // 0,0001 kg × 21,90 = 0,00219 → R$ 0,00
+        var error = Assert.Throws<DomainException>(() => sale.AddItem(Guid.NewGuid(), "1", "SEM GTIN", "Pão", "KG", new Money(21.90m), 0.0001m, Tax));
+
+        Assert.Contains("pequena demais", error.Message);
+        Assert.Empty(sale.Items);
+    }
+
+    [Fact]
+    public void Saved_sale_with_a_fraction_of_a_unit_still_loads()
+    {
+        var item = new SaleItem(Guid.NewGuid(), 1, Guid.NewGuid(), "1", "SEM GTIN", "Refrigerante", "UN", new Money(5m), 0.5m, Tax);
+
+        var sale = Sale.Restore(Guid.NewGuid(), SaleStatus.Open, Now, null, Money.Zero, [item], []);
+
+        Assert.Equal(new Money(2.50m), sale.Total);
+    }
+
+    [Fact]
     public void Closed_sale_cannot_change()
     {
         var sale = SaleWith((10m, 1));
@@ -133,7 +187,9 @@ public class SaleTests
     [InlineData("1.5 * PAO", 1.5, "PAO")]
     public void Scan_input_reads_optional_quantity(string typed, decimal quantity, string code)
     {
-        Assert.Equal(new ScanInput(quantity, code), ScanInput.Parse(typed));
+        var input = ScanInput.Parse(typed);
+
+        Assert.Equal((quantity, code), (input.Quantity, input.Code));
     }
 
     [Theory]

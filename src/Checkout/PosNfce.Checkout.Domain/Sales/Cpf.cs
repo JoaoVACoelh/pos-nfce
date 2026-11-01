@@ -13,14 +13,15 @@ public sealed record Cpf
     {
         var value = new string((input ?? "").Where(char.IsAsciiDigit).ToArray());
 
-        if (value.Length != 11 || value.Distinct().Count() == 1)
+        if (value.Length != 11)
         {
             throw new DomainException($"CPF \"{input}\" inválido: deve ter 11 dígitos.");
         }
 
-        if (CheckDigit(value[..9]) != value[9] - '0' || CheckDigit(value[..10]) != value[10] - '0')
+        // All digits equal pass the check digits (111.111.111-11), but no such CPF exists.
+        if (value.Distinct().Count() == 1 || CheckDigit(value[..9]) != value[9] - '0' || CheckDigit(value[..10]) != value[10] - '0')
         {
-            throw new DomainException($"CPF \"{input}\" inválido: dígito verificador não confere.");
+            throw new DomainException($"CPF \"{input}\" inválido: confira os números digitados.");
         }
 
         return new Cpf(value);

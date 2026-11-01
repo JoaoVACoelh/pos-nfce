@@ -7,6 +7,9 @@ public interface IProductCatalog
 {
     /// <summary>Active product by GTIN or internal code; null when not found.</summary>
     Task<ProductToSell?> FindAsync(string code, CancellationToken cancellationToken = default);
+
+    /// <summary>Active product whose internal code is the number a labeling scale printed; null when not found.</summary>
+    Task<ProductToSell?> FindByScaleCodeAsync(int itemCode, CancellationToken cancellationToken = default);
 }
 
 public sealed record ProductToSell(

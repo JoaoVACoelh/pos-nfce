@@ -51,6 +51,7 @@ public partial class App : Application
             services.AddSingleton<MainViewModel>();
             services.AddSingleton<MainWindow>();
             services.AddTransient<CheckoutViewModel>();
+            services.AddTransient<SaleNfceViewModel>();
             services.AddTransient<FiscalDocumentsViewModel>();
             services.AddTransient<ProductsViewModel>();
             services.AddTransient<TaxRulesViewModel>();
