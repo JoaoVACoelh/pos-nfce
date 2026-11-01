@@ -24,6 +24,9 @@ public sealed class Sale
     public DateTimeOffset? ClosedAt { get; private set; }
     public Money Discount { get; private set; }
 
+    /// <summary>"CPF na nota": optional customer identification sent in the NFC-e.</summary>
+    public Cpf? CustomerCpf { get; private set; }
+
     public IReadOnlyList<SaleItem> Items => _items;
     public IReadOnlyList<Payment> Payments => _payments;
 
@@ -51,8 +54,15 @@ public sealed class Sale
     public static Sale Open(DateTimeOffset now) => new(Guid.NewGuid(), SaleStatus.Open, now, null, Money.Zero, [], []);
 
     public static Sale Restore(Guid id, SaleStatus status, DateTimeOffset openedAt, DateTimeOffset? closedAt, Money discount,
-        IEnumerable<SaleItem> items, IEnumerable<Payment> payments) =>
-        new(id, status, openedAt, closedAt, discount, items, payments);
+        IEnumerable<SaleItem> items, IEnumerable<Payment> payments, Cpf? customerCpf = null) =>
+        new(id, status, openedAt, closedAt, discount, items, payments) { CustomerCpf = customerCpf };
+
+    /// <summary>Sets or clears (null) the customer's CPF. Allowed until the sale is closed.</summary>
+    public void IdentifyCustomer(Cpf? cpf)
+    {
+        EnsureOpen();
+        CustomerCpf = cpf;
+    }
 
     public SaleItem AddItem(Guid productId, string code, string gtin, string description, string unit,
         Money unitPrice, decimal quantity, TaxSnapshot tax)
@@ -62,6 +72,7 @@ public sealed class Sale
 
         var line = _items.Count == 0 ? 1 : _items.Max(i => i.Line) + 1;
         var item = new SaleItem(Guid.NewGuid(), line, productId, code, gtin, description, unit, unitPrice, quantity, tax);
+        item.EnsureSellable();
         _items.Add(item);
         return item;
     }
@@ -99,6 +110,9 @@ public sealed class Sale
         Discount = discount;
     }
 
+    /// <summary>The largest change a cash payment can leave.</summary>
+    public static readonly Money MaxChange = new(1_000m);
+
     /// <summary>Checks a payment before charging it on the terminal, so a payment the sale would refuse is never charged.</summary>
     public void CheckPayment(PaymentMethod method, Money amount)
     {
@@ -120,6 +134,12 @@ public sealed class Sale
             throw new DomainException($"Pagamento em cartão ou PIX não pode passar do que falta ({Remaining}).");
         }
 
+        // A barcode read in the amount field would otherwise become a payment of trillions.
+        if (amount > Remaining + MaxChange)
+        {
+            throw new DomainException($"Valor alto demais: o troco passaria de {MaxChange}. Confira o valor digitado.");
+        }
+
         // Throwaway instance: runs the amount checks (positive, two decimals) that live in Payment.
         _ = new Payment(Guid.NewGuid(), method, amount, integrated: false);
     }
@@ -137,7 +157,8 @@ public sealed class Sale
         _payments.Remove(payment);
     }
 
-    public void Complete(DateTimeOffset now)
+    /// <param name="cpfRequiredFrom">Total from which the receipt must carry the customer's CPF (set by the fiscal rules).</param>
+    public void Complete(DateTimeOffset now, Money? cpfRequiredFrom = null)
     {
         EnsureOpen();
 
@@ -149,6 +170,11 @@ public sealed class Sale
         if (Remaining > Money.Zero)
         {
             throw new DomainException($"Ainda falta receber {Remaining}.");
+        }
+
+        if (CustomerCpf is null && cpfRequiredFrom is { } limit && Total >= limit)
+        {
+            throw new DomainException($"Venda de {limit} ou mais: tecle F10 e informe o CPF.");
         }
 
         Status = SaleStatus.Completed;

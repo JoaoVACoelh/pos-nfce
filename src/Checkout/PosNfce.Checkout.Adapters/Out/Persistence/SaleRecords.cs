@@ -9,6 +9,7 @@ public sealed class SaleRecord
     public DateTimeOffset? ClosedAt { get; set; }
     public decimal Discount { get; set; }
     public decimal Total { get; set; }
+    public string? CustomerCpf { get; set; }
     public List<SaleItemRecord> Items { get; set; } = [];
     public List<PaymentRecord> Payments { get; set; } = [];
 }
@@ -38,6 +39,7 @@ public sealed class SaleItemRecord
     public decimal CofinsRate { get; set; }
     public string IbsCbsCst { get; set; } = "";
     public string ClassTrib { get; set; } = "";
+    public decimal IbsCbsReduction { get; set; }
 }
 
 /// <summary>Row of <c>checkout_payments</c>.</summary>

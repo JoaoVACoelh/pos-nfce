@@ -35,8 +35,9 @@ public sealed class SaleRepository(CheckoutDbContext db) : ISaleRepository
         r.Id, (SaleStatus)r.Status, r.OpenedAt, r.ClosedAt, new Money(r.Discount),
         r.Items.Select(i => new SaleItem(
             i.Id, i.Line, i.ProductId, i.Code, i.Gtin, i.Description, i.Unit, new Money(i.UnitPrice), i.Quantity,
-            new TaxSnapshot(i.Ncm, i.Cest, i.Origin, i.Cfop, i.Csosn, i.PisCst, i.PisRate, i.CofinsCst, i.CofinsRate, i.IbsCbsCst, i.ClassTrib))),
-        r.Payments.Select(p => new Payment(p.Id, (PaymentMethod)p.Method, new Money(p.Amount), p.Integrated)));
+            new TaxSnapshot(i.Ncm, i.Cest, i.Origin, i.Cfop, i.Csosn, i.PisCst, i.PisRate, i.CofinsCst, i.CofinsRate, i.IbsCbsCst, i.ClassTrib, i.IbsCbsReduction))),
+        r.Payments.Select(p => new Payment(p.Id, (PaymentMethod)p.Method, new Money(p.Amount), p.Integrated)),
+        r.CustomerCpf is null ? null : Cpf.Parse(r.CustomerCpf));
 
     private static SaleRecord ToRecord(Sale sale) => new()
     {
@@ -46,6 +47,7 @@ public sealed class SaleRepository(CheckoutDbContext db) : ISaleRepository
         ClosedAt = sale.ClosedAt,
         Discount = sale.Discount.Amount,
         Total = sale.Total.Amount,
+        CustomerCpf = sale.CustomerCpf?.Value,
         Items = sale.Items.Select(i => new SaleItemRecord
         {
             Id = i.Id,
@@ -70,6 +72,7 @@ public sealed class SaleRepository(CheckoutDbContext db) : ISaleRepository
             CofinsRate = i.Tax.CofinsRate,
             IbsCbsCst = i.Tax.IbsCbsCst,
             ClassTrib = i.Tax.ClassTrib,
+            IbsCbsReduction = i.Tax.IbsCbsReduction,
         }).ToList(),
         Payments = sale.Payments.Select(p => new PaymentRecord
         {

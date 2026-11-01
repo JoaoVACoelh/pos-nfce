@@ -15,4 +15,5 @@ public sealed record TaxSnapshot(
     string CofinsCst,
     decimal CofinsRate,
     string IbsCbsCst,
-    string ClassTrib);
+    string ClassTrib,
+    decimal IbsCbsReduction);

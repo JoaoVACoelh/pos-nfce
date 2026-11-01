@@ -12,6 +12,12 @@ public sealed class FiscalDbContext(DbContextOptions<FiscalDbContext> options) :
 
     public DbSet<IssuerRecord> Issuers => Set<IssuerRecord>();
 
+    public DbSet<FiscalDocumentRecord> Documents => Set<FiscalDocumentRecord>();
+
+    public DbSet<IbsCbsRateRecord> IbsCbsRates => Set<IbsCbsRateRecord>();
+
+    public DbSet<ReceiptPrinterRecord> ReceiptPrinter => Set<ReceiptPrinterRecord>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<IssuerRecord>(issuer =>
@@ -33,6 +39,64 @@ public sealed class FiscalDbContext(DbContextOptions<FiscalDbContext> options) :
             issuer.Property(i => i.Phone).HasMaxLength(14);
             issuer.Property(i => i.CscTokenId).HasMaxLength(6);
             issuer.Property(i => i.CertificateCnpj).HasMaxLength(14);
+        });
+
+        modelBuilder.Entity<FiscalDocumentRecord>(document =>
+        {
+            document.ToTable("fiscal_documents");
+            document.HasKey(d => d.Id);
+            document.HasIndex(d => d.SaleId).IsUnique();
+            document.Property(d => d.AccessKey).HasMaxLength(44);
+            document.Property(d => d.CustomerCpf).HasMaxLength(11);
+            document.Property(d => d.Protocol).HasMaxLength(20);
+            document.Property(d => d.LastMessage).HasMaxLength(500);
+            document.Property(d => d.QrCode).HasMaxLength(600);
+            document.Property(d => d.ConsultUrl).HasMaxLength(200);
+            document.Property(d => d.AdditionalInfo).HasMaxLength(5000);
+            document.HasIndex(d => d.Status);
+            // Two documents can never share a number; NULL (not numbered yet) is allowed many times.
+            document.HasIndex(d => new { d.Series, d.Number }).IsUnique();
+            document.HasMany(d => d.Items).WithOne().HasForeignKey(i => i.DocumentId).OnDelete(DeleteBehavior.Cascade);
+            document.HasMany(d => d.Payments).WithOne().HasForeignKey(p => p.DocumentId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<FiscalItemRecord>(item =>
+        {
+            item.ToTable("fiscal_document_items");
+            item.Property(i => i.Code).HasMaxLength(60);
+            item.Property(i => i.Gtin).HasMaxLength(14);
+            item.Property(i => i.Description).HasMaxLength(120);
+            item.Property(i => i.Unit).HasMaxLength(6);
+            item.Property(i => i.Ncm).HasMaxLength(8);
+            item.Property(i => i.Cest).HasMaxLength(7);
+            item.Property(i => i.Cfop).HasMaxLength(4);
+            item.Property(i => i.Csosn).HasMaxLength(3);
+            item.Property(i => i.PisCst).HasMaxLength(2);
+            item.Property(i => i.CofinsCst).HasMaxLength(2);
+            item.Property(i => i.IbsCbsCst).HasMaxLength(3);
+            item.Property(i => i.ClassTrib).HasMaxLength(6);
+        });
+
+        modelBuilder.Entity<IbsCbsRateRecord>(rate =>
+        {
+            rate.ToTable("fiscal_ibs_cbs_rates");
+            rate.HasKey(r => r.ValidFrom);
+            rate.Property(r => r.Source).HasMaxLength(200);
+        });
+
+        modelBuilder.Entity<ReceiptPrinterRecord>(printer =>
+        {
+            printer.ToTable("fiscal_receipt_printer");
+            printer.HasKey(p => p.Id);
+            printer.Property(p => p.Id).ValueGeneratedNever();
+            printer.Property(p => p.PrinterName).HasMaxLength(260);
+            printer.Property(p => p.Host).HasMaxLength(255);
+        });
+
+        modelBuilder.Entity<FiscalPaymentRecord>(payment =>
+        {
+            payment.ToTable("fiscal_document_payments");
+            payment.Property(p => p.Method).HasMaxLength(20);
         });
     }
 }

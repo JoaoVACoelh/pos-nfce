@@ -7,7 +7,7 @@ public sealed record IssuerProfile
 {
     public Cnpj Cnpj { get; }
 
-    /// <summary>Inscrição Estadual, digits only. Each state has its own check-digit rule, not validated yet.</summary>
+    /// <summary>Inscrição Estadual, digits only, checked by the rule of the store's state (<see cref="StateRegistrationRule"/>).</summary>
     public string StateRegistration { get; }
 
     public string LegalName { get; }
@@ -22,11 +22,7 @@ public sealed record IssuerProfile
     {
         Cnpj = cnpj;
 
-        StateRegistration = Text.Digits(stateRegistration);
-        if (StateRegistration.Length is < 2 or > 14)
-        {
-            throw new DomainException("Inscrição Estadual deve ter entre 2 e 14 dígitos.");
-        }
+        StateRegistration = StateRegistrationRule.Validate(stateRegistration, address.State);
 
         LegalName = Text.Required(legalName, "Razão social", 60);
         TradeName = Text.Optional(tradeName, "Nome fantasia", 60);

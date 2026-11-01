@@ -15,6 +15,12 @@ public sealed class Issuer
     public Csc? Csc { get; private set; }
     public int Series { get; private set; }
     public long NextNumber { get; private set; }
+
+    /// <summary>
+    /// Send each sale's NFC-e to SEFAZ as soon as the sale closes. Off until the real certificate and CSC are in place:
+    /// with the development certificate SEFAZ refuses the connection.
+    /// </summary>
+    public bool AutoIssue { get; private set; }
     public IssuerCertificate? Certificate { get; private set; }
 
     private Issuer(Guid id, IssuerProfile profile, int series, long nextNumber)
@@ -28,8 +34,9 @@ public sealed class Issuer
         new(Guid.NewGuid(), profile, series, nextNumber);
 
     /// <summary>Rebuilds an issuer already stored, secrets already decrypted by the persistence adapter.</summary>
-    public static Issuer Restore(Guid id, IssuerProfile profile, int series, long nextNumber, Csc? csc, IssuerCertificate? certificate) =>
-        new(id, profile, series, nextNumber) { Csc = csc, Certificate = certificate };
+    public static Issuer Restore(
+        Guid id, IssuerProfile profile, int series, long nextNumber, Csc? csc, IssuerCertificate? certificate, bool autoIssue = false) =>
+        new(id, profile, series, nextNumber) { Csc = csc, Certificate = certificate, AutoIssue = autoIssue };
 
     public void Update(IssuerProfile profile, int series, long nextNumber)
     {
@@ -43,6 +50,16 @@ public sealed class Issuer
     }
 
     public void ChangeCsc(Csc csc) => Csc = csc;
+
+    public void SetAutoIssue(bool enabled)
+    {
+        if (enabled && (Certificate is null || Csc is null))
+        {
+            throw new DomainException("Para enviar as notas automaticamente, cadastre antes o certificado e o CSC.");
+        }
+
+        AutoIssue = enabled;
+    }
 
     /// <summary>
     /// SEFAZ only accepts documents signed by a certificate of the same company (same CNPJ root) and still valid.

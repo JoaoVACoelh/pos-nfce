@@ -95,6 +95,9 @@ namespace PosNfce.Checkout.Adapters.Out.Persistence.Migrations
                         .HasMaxLength(3)
                         .HasColumnType("TEXT");
 
+                    b.Property<decimal>("IbsCbsReduction")
+                        .HasColumnType("TEXT");
+
                     b.Property<int>("Line")
                         .HasColumnType("INTEGER");
 
@@ -148,6 +151,10 @@ namespace PosNfce.Checkout.Adapters.Out.Persistence.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset?>("ClosedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CustomerCpf")
+                        .HasMaxLength(11)
                         .HasColumnType("TEXT");
 
                     b.Property<decimal>("Discount")

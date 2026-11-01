@@ -44,8 +44,8 @@ public sealed class IbptImportTests : IDisposable
             await NewImport().ExecuteAsync(file);
         }
 
-        var domestic = await NewFind().ExecuteAsync("2202.10.00", null, ProductOrigin.Domestic);
-        var imported = await NewFind().ExecuteAsync("22021000", null, ProductOrigin.ForeignDirectImport);
+        var domestic = await NewFind().ExecuteAsync("2202.10.00", null, (int)ProductOrigin.Domestic);
+        var imported = await NewFind().ExecuteAsync("22021000", null, (int)ProductOrigin.ForeignDirectImport);
 
         Assert.Equal((13.45m, 18.00m, 0m), (domestic!.Federal, domestic.State, domestic.Municipal));
         Assert.Equal(15.45m, imported!.Federal);
@@ -59,7 +59,7 @@ public sealed class IbptImportTests : IDisposable
             await NewImport().ExecuteAsync(file);
         }
 
-        Assert.Equal(20.00m, (await NewFind().ExecuteAsync("22021000", "01", ProductOrigin.Domestic))!.Federal);
+        Assert.Equal(20.00m, (await NewFind().ExecuteAsync("22021000", "01", (int)ProductOrigin.Domestic))!.Federal);
     }
 
     [Fact]
@@ -70,7 +70,7 @@ public sealed class IbptImportTests : IDisposable
             await NewImport().ExecuteAsync(file);
         }
 
-        Assert.Equal(4.20m, (await NewFind().ExecuteAsync("04069010", null, ProductOrigin.Domestic))!.Federal);
+        Assert.Equal(4.20m, (await NewFind().ExecuteAsync("04069010", null, (int)ProductOrigin.Domestic))!.Federal);
     }
 
     [Fact]
@@ -87,7 +87,7 @@ public sealed class IbptImportTests : IDisposable
         await NewImport().ExecuteAsync(Csv("22021000;;0;Antigo;10.00;10.00;10.00;0.00;01/01/2026;30/06/2026;K;26.1.A;IBPT"));
         await NewImport().ExecuteAsync(Csv("19052090;;0;Novo;7.85;9.85;12.00;0.00;01/07/2026;31/12/2026;K;26.2.A;IBPT"));
 
-        Assert.Null(await NewFind().ExecuteAsync("22021000", null, ProductOrigin.Domestic));
+        Assert.Null(await NewFind().ExecuteAsync("22021000", null, (int)ProductOrigin.Domestic));
         var status = await new GetIbptStatus(new IbptRateRepository(_database.NewContext()), TimeProvider.System).ExecuteAsync();
         Assert.Equal(("26.2.A", 1), (status!.Version, status.Count));
     }
@@ -101,7 +101,7 @@ public sealed class IbptImportTests : IDisposable
             Csv("19052090;;0;Ok;7.85;9.85;12.00;0.00;01/07/2026;31/12/2026;K;26.2.A;IBPT\r\n19059090;;0;Ruim;abc;9.85;12.00;0.00;01/07/2026;31/12/2026;K;26.2.A;IBPT")));
 
         Assert.Contains("Linha 3", error.Message);
-        Assert.NotNull(await NewFind().ExecuteAsync("22021000", null, ProductOrigin.Domestic));
+        Assert.NotNull(await NewFind().ExecuteAsync("22021000", null, (int)ProductOrigin.Domestic));
     }
 
     [Fact]

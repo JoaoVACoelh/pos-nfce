@@ -168,6 +168,9 @@ namespace PosNfce.Catalog.Adapters.Out.Persistence.Migrations
                         .HasMaxLength(3)
                         .HasColumnType("TEXT");
 
+                    b.Property<decimal>("IbsCbsReduction")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(60)

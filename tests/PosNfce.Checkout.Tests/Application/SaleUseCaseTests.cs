@@ -49,7 +49,7 @@ public sealed class SaleUseCaseTests : IDisposable
         var view = await Pay(PaymentMethod.Cash, 20m);
         Assert.Equal(17.00m, view.Total); // 10,98 + 6,45 - 0,43
 
-        var completed = await new CompleteSale(Repository(), _events, TimeProvider.System).ExecuteAsync();
+        var completed = await new CompleteSale(Repository(), _events, TimeProvider.System, new NoIdentificationLimit()).ExecuteAsync();
 
         Assert.Equal(3.00m, completed.Change);
         var published = Assert.Single(_events.Published.OfType<SaleCompleted>());
@@ -81,10 +81,89 @@ public sealed class SaleUseCaseTests : IDisposable
     }
 
     [Fact]
+    public async Task Scale_label_adds_the_weighed_product_with_the_label_weight()
+    {
+        _catalog.Add(new ProductToSell(Guid.NewGuid(), "000005", "SEM GTIN", "Pão francês", "KG", 21.90m, SaleTests.Tax));
+
+        var item = Assert.Single((await Scan("2000005003646")).Items);
+
+        // Same as the printed label: 0,364 kg × 21,90 = 7,9716 → R$ 7,97.
+        Assert.Equal(("000005", 0.364m, 7.97m), (item.Code, item.Quantity, item.Total));
+    }
+
+    [Fact]
+    public async Task Scale_label_with_a_quantity_is_refused()
+    {
+        _catalog.Add(new ProductToSell(Guid.NewGuid(), "000005", "SEM GTIN", "Pão francês", "KG", 21.90m, SaleTests.Tax));
+
+        var error = await Assert.ThrowsAsync<DomainException>(() => Scan("3*2000005003646"));
+
+        Assert.Contains("já traz o peso", error.Message);
+    }
+
+    [Fact]
+    public async Task Scale_label_of_a_product_sold_by_unit_is_refused()
+    {
+        _catalog.Add(new ProductToSell(Guid.NewGuid(), "7", "SEM GTIN", "Pão de queijo", "UN", 1.50m, SaleTests.Tax));
+
+        var error = await Assert.ThrowsAsync<DomainException>(() => Scan("2000007010000"));
+
+        Assert.Contains("KG", error.Message);
+        Assert.Null(await Repository().GetOpenAsync());
+    }
+
+    [Fact]
+    public async Task Scale_label_without_a_product_names_the_scale_code()
+    {
+        var error = await Assert.ThrowsAsync<DomainException>(() => Scan("2000009002508"));
+
+        Assert.Contains("código 9", error.Message);
+    }
+
+    [Fact]
+    public async Task Registered_barcode_starting_with_2_wins_over_the_scale_label()
+    {
+        _catalog.Add(new ProductToSell(Guid.NewGuid(), "000005", "SEM GTIN", "Pão francês", "KG", 21.90m, SaleTests.Tax));
+        _catalog.Add(new ProductToSell(Guid.NewGuid(), "BOLO", "2000005003646", "Bolo", "UN", 15m, SaleTests.Tax));
+
+        var item = Assert.Single((await Scan("2000005003646")).Items);
+
+        Assert.Equal(("BOLO", 1m), (item.Code, item.Quantity));
+    }
+
+    [Fact]
+    public async Task Product_sold_by_kg_without_a_weight_is_refused()
+    {
+        await Assert.ThrowsAsync<WeightRequiredException>(() => Scan("PAO"));
+
+        Assert.Null(await Repository().GetOpenAsync());
+    }
+
+    [Fact]
+    public async Task Number_typed_without_leading_zeros_finds_the_product()
+    {
+        _catalog.Add(new ProductToSell(Guid.NewGuid(), "000005", "SEM GTIN", "Pão francês", "KG", 21.90m, SaleTests.Tax));
+
+        var item = Assert.Single((await Scan("0,5*5")).Items);
+
+        Assert.Equal(("000005", 0.5m), (item.Code, item.Quantity));
+    }
+
+    [Fact]
+    public async Task Barcode_read_as_a_cash_amount_is_refused()
+    {
+        await Scan("7891234567895");
+
+        await Assert.ThrowsAsync<DomainException>(() => Pay(PaymentMethod.Cash, 2000005003646m));
+
+        Assert.Empty((await new GetCurrentSale(Repository()).ExecuteAsync()).Payments);
+    }
+
+    [Fact]
     public async Task Removed_item_and_payment_are_gone_after_reload()
     {
         var view = await Scan("7891234567895");
-        await Scan("PAO");
+        await Scan("1*PAO");
         view = await new RemoveItemFromSale(Repository()).ExecuteAsync(view.Items[0].Id);
         view = await Pay(PaymentMethod.Pix, 5m);
         view = await new RemoveSalePayment(Repository()).ExecuteAsync(view.Payments[0].Id);
@@ -137,6 +216,88 @@ public sealed class SaleUseCaseTests : IDisposable
         Assert.Equal(0, gateway.Charges);
     }
 
+    [Fact]
+    public async Task Customer_cpf_is_kept_with_the_sale_and_sent_in_the_event()
+    {
+        await Scan("7891234567895");
+        var view = await new IdentifySaleCustomer(Repository()).ExecuteAsync("529.982.247-25");
+        Assert.Equal("529.982.247-25", view.CustomerCpf);
+        await Pay(PaymentMethod.Cash, 10m);
+
+        await new CompleteSale(Repository(), _events, TimeProvider.System, new NoIdentificationLimit()).ExecuteAsync();
+
+        Assert.Equal("52998224725", Assert.Single(_events.Published.OfType<SaleCompleted>()).CustomerCpf);
+    }
+
+    [Fact]
+    public async Task Empty_cpf_removes_it_and_invalid_cpf_is_refused()
+    {
+        await Scan("7891234567895");
+        await new IdentifySaleCustomer(Repository()).ExecuteAsync("52998224725");
+
+        var view = await new IdentifySaleCustomer(Repository()).ExecuteAsync("");
+
+        Assert.Null(view.CustomerCpf);
+        await Assert.ThrowsAsync<DomainException>(() => new IdentifySaleCustomer(Repository()).ExecuteAsync("123"));
+    }
+
+    [Fact]
+    public async Task Failing_reaction_keeps_the_sale_and_returns_a_warning()
+    {
+        await Scan("7891234567895");
+        await Pay(PaymentMethod.Cash, 10m);
+
+        var completed = await new CompleteSale(Repository(), new FailingPublisher(), TimeProvider.System, new NoIdentificationLimit()).ExecuteAsync();
+
+        Assert.Contains("nota fiscal", completed.AfterSaleWarning);
+        Assert.Equal(SaleView.Empty, await new GetCurrentSale(Repository()).ExecuteAsync()); // sale closed anyway
+    }
+
+    [Fact]
+    public async Task Sale_from_the_identification_limit_needs_the_cpf_before_closing()
+    {
+        await Scan("2*7891234567895"); // R$ 10,98
+        await Pay(PaymentMethod.Cash, 10.98m);
+        var complete = new CompleteSale(Repository(), _events, TimeProvider.System, new FixedIdentificationLimit(10.98m));
+
+        var error = await Assert.ThrowsAsync<DomainException>(() => complete.ExecuteAsync());
+        Assert.Contains("CPF", error.Message);
+        Assert.Empty(_events.Published);
+
+        await new IdentifySaleCustomer(Repository()).ExecuteAsync("529.982.247-25");
+        var completed = await new CompleteSale(Repository(), _events, TimeProvider.System, new FixedIdentificationLimit(10.98m)).ExecuteAsync();
+
+        Assert.Equal(10.98m, completed.Total);
+        Assert.Equal("52998224725", Assert.Single(_events.Published.OfType<SaleCompleted>()).CustomerCpf);
+    }
+
+    [Fact]
+    public async Task Sale_below_the_identification_limit_closes_without_cpf()
+    {
+        await Scan("7891234567895");
+        await Pay(PaymentMethod.Cash, 5.49m);
+
+        var completed = await new CompleteSale(Repository(), _events, TimeProvider.System, new FixedIdentificationLimit(10_000m)).ExecuteAsync();
+
+        Assert.Equal(5.49m, completed.Total);
+    }
+
+    private sealed class NoIdentificationLimit : ICustomerIdentificationPolicy
+    {
+        public Task<decimal?> CpfRequiredFromAsync(CancellationToken cancellationToken = default) => Task.FromResult<decimal?>(null);
+    }
+
+    private sealed class FixedIdentificationLimit(decimal limit) : ICustomerIdentificationPolicy
+    {
+        public Task<decimal?> CpfRequiredFromAsync(CancellationToken cancellationToken = default) => Task.FromResult<decimal?>(limit);
+    }
+
+    private sealed class FailingPublisher : IEventPublisher
+    {
+        public Task PublishAsync<TEvent>(TEvent @event, CancellationToken cancellationToken = default)
+            where TEvent : IDomainEvent => throw new InvalidOperationException("banco indisponível");
+    }
+
     private sealed class CountingGateway : ICardPaymentGateway
     {
         public int Charges { get; private set; }
@@ -156,6 +317,9 @@ public sealed class SaleUseCaseTests : IDisposable
 
         public Task<ProductToSell?> FindAsync(string code, CancellationToken cancellationToken = default) =>
             Task.FromResult(_products.FirstOrDefault(p => p.Gtin == code || p.Code == code));
+
+        public Task<ProductToSell?> FindByScaleCodeAsync(int itemCode, CancellationToken cancellationToken = default) =>
+            Task.FromResult(_products.FirstOrDefault(p => int.TryParse(p.Code, out var number) && number == itemCode));
     }
 
     private sealed class RecordingPublisher : IEventPublisher

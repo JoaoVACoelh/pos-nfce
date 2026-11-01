@@ -5,24 +5,37 @@ using PosNfce.SharedKernel;
 
 namespace PosNfce.Checkout.Application.Sales;
 
-public sealed record CompletedSale(Guid SaleId, decimal Total, decimal Change);
+/// <summary><paramref name="AfterSaleWarning"/>: set when the sale closed but a reaction to it (e.g. the NFC-e) failed.</summary>
+public sealed record CompletedSale(Guid SaleId, decimal Total, decimal Change, string? AfterSaleWarning = null);
 
 /// <summary>
 /// Closes a fully paid sale and publishes <see cref="SaleCompleted"/>. The sale is saved first: if a handler
-/// fails (e.g. SEFAZ offline in Stage 3), the sale stays recorded and Fiscal deals with it.
+/// fails, the sale stays recorded and the cashier is warned, instead of the screen breaking with money already taken.
 /// </summary>
-public sealed class CompleteSale(ISaleRepository sales, IEventPublisher events, TimeProvider clock)
+public sealed class CompleteSale(
+    ISaleRepository sales, IEventPublisher events, TimeProvider clock, ICustomerIdentificationPolicy identification)
 {
     public async Task<CompletedSale> ExecuteAsync(CancellationToken cancellationToken = default)
     {
         var sale = await OpenSale.LoadAsync(sales, cancellationToken);
         var now = BrazilTime.Now(clock);
 
-        sale.Complete(now);
+        var cpfRequiredFrom = await identification.CpfRequiredFromAsync(cancellationToken);
+        sale.Complete(now, cpfRequiredFrom is { } limit ? new Money(limit) : null);
         await sales.SaveAsync(sale, cancellationToken);
-        await events.PublishAsync(ToEvent(sale, now), cancellationToken);
 
-        return new CompletedSale(sale.Id, sale.Total.Amount, sale.Change.Amount);
+        string? warning = null;
+        try
+        {
+            await events.PublishAsync(ToEvent(sale, now), cancellationToken);
+        }
+        catch (Exception error) when (error is not OperationCanceledException)
+        {
+            // The customer already paid: the sale can't be undone because of a later step. Stage 4 adds retries.
+            warning = $"A venda foi registrada, mas a nota fiscal não: {error.Message}";
+        }
+
+        return new CompletedSale(sale.Id, sale.Total.Amount, sale.Change.Amount, warning);
     }
 
     private static SaleCompleted ToEvent(Sale sale, DateTimeOffset now) => new(
@@ -35,6 +48,7 @@ public sealed class CompleteSale(ISaleRepository sales, IEventPublisher events, 
         sale.Items.Select(i => new SoldItem(
             i.Line, i.ProductId, i.Code, i.Gtin, i.Description, i.Unit, i.Quantity, i.UnitPrice.Amount, i.Total.Amount,
             i.Tax.Ncm, i.Tax.Cest, i.Tax.Origin, i.Tax.Cfop, i.Tax.Csosn,
-            i.Tax.PisCst, i.Tax.PisRate, i.Tax.CofinsCst, i.Tax.CofinsRate, i.Tax.IbsCbsCst, i.Tax.ClassTrib)).ToList(),
-        sale.Payments.Select(p => new ReceivedPayment(p.Method.ToString(), p.Amount.Amount, p.Integrated)).ToList());
+            i.Tax.PisCst, i.Tax.PisRate, i.Tax.CofinsCst, i.Tax.CofinsRate, i.Tax.IbsCbsCst, i.Tax.ClassTrib, i.Tax.IbsCbsReduction)).ToList(),
+        sale.Payments.Select(p => new ReceivedPayment(p.Method.ToString(), p.Amount.Amount, p.Integrated)).ToList(),
+        sale.CustomerCpf?.Value);
 }

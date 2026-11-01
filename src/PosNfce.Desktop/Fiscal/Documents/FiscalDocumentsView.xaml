@@ -1,0 +1,44 @@
+<UserControl x:Class="PosNfce.Desktop.Fiscal.Documents.FiscalDocumentsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:local="clr-namespace:PosNfce.Desktop.Fiscal.Documents"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=local:FiscalDocumentsViewModel}"
+             Loaded="OnLoaded">
+    <DockPanel Margin="24">
+        <DockPanel DockPanel.Dock="Top">
+            <Button DockPanel.Dock="Right" Content="Atualizar" Command="{Binding LoadCommand}" VerticalAlignment="Top" />
+            <Button x:Name="PrintDanfceButton" DockPanel.Dock="Right" Content="Imprimir DANFCE" Command="{Binding PrintDanfceCommand}"
+                    VerticalAlignment="Top" Margin="0,0,8,0" ToolTip="Imprime o cupom na impressora configurada em &quot;Impressora&quot;." />
+            <Button x:Name="DanfceButton" DockPanel.Dock="Right" Content="Ver DANFCE" Command="{Binding ShowDanfceCommand}"
+                    VerticalAlignment="Top" Margin="0,0,8,0" ToolTip="Mostra e imprime o cupom da nota selecionada." />
+            <Button x:Name="IssueButton" DockPanel.Dock="Right" Content="Emitir (enviar à SEFAZ)" Command="{Binding IssueCommand}"
+                    Style="{StaticResource PrimaryButton}" VerticalAlignment="Top" Margin="0,0,8,0"
+                    ToolTip="Assina e envia a nota selecionada para a SEFAZ (homologação)." />
+            <Button x:Name="PrepareXmlButton" DockPanel.Dock="Right" Content="Gerar XML assinado (teste)" Command="{Binding PrepareXmlCommand}"
+                    VerticalAlignment="Top" Margin="0,0,8,0" ToolTip="Reserva o número, calcula os impostos, assina e valida o XML. Nada é enviado à SEFAZ." />
+            <TextBlock Text="Notas fiscais" Style="{StaticResource PageTitle}" />
+        </DockPanel>
+        <TextBlock x:Name="SummaryText" DockPanel.Dock="Top" Text="{Binding Summary}" Style="{StaticResource Hint}" Margin="0,0,0,4" />
+        <TextBlock x:Name="MessageText" DockPanel.Dock="Top" Text="{Binding Message}" Style="{StaticResource FormMessage}" Margin="0,0,0,12" />
+
+        <Border Style="{StaticResource GridFrame}">
+            <DataGrid x:Name="DocumentsGrid" ItemsSource="{Binding Documents}" SelectedItem="{Binding SelectedDocument}" SelectionMode="Single"
+                      AutoGenerateColumns="False" IsReadOnly="True"
+                      HeadersVisibility="Column" GridLinesVisibility="Horizontal">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Data e hora" Binding="{Binding SoldAt, StringFormat='dd/MM/yyyy HH:mm:ss'}" Width="160" />
+                    <DataGridTextColumn Header="Série-número" Binding="{Binding Number}" Width="110" />
+                    <DataGridTextColumn Header="Itens" Binding="{Binding ItemCount}" Width="60" />
+                    <DataGridTextColumn Header="Desconto" Binding="{Binding Discount, StringFormat=C2}" Width="100" />
+                    <DataGridTextColumn Header="Total" Binding="{Binding Total, StringFormat=C2}" Width="110" />
+                    <DataGridTextColumn Header="Situação" Binding="{Binding Status}" Width="220" />
+                    <DataGridTextColumn Header="Chave de acesso" Binding="{Binding AccessKey}" Width="330" />
+                    <DataGridTextColumn Header="Último retorno" Binding="{Binding LastMessage}" Width="*" />
+                </DataGrid.Columns>
+            </DataGrid>
+        </Border>
+    </DockPanel>
+</UserControl>

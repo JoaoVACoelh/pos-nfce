@@ -17,7 +17,7 @@ public sealed class Product
     /// <summary>Store's internal code (<c>cProd</c>). Products without a barcode are found by it.</summary>
     public string Code { get; }
 
-    public Gtin Gtin { get; }
+    public Gtin Gtin { get; private set; }
     public string Description { get; private set; }
     public Ncm Ncm { get; private set; }
     public Cest? Cest { get; private set; }
@@ -56,11 +56,12 @@ public sealed class Product
         new(id, code, gtin, description, ncm, cest, unit, price, origin, taxRuleId, active);
 
     /// <summary>
-    /// Changes the editable data. Code and GTIN stay fixed: they identify the product in documents already issued
-    /// and at the scanner.
+    /// Changes the editable data. Only the internal code stays fixed: it is how the store identifies the product.
+    /// Changing the GTIN (e.g. the supplier changed the package) doesn't affect past sales, which keep their own copy.
     /// </summary>
-    public void Update(string description, Ncm ncm, Cest? cest, string unit, Money price, ProductOrigin origin, Guid taxRuleId)
+    public void Update(Gtin gtin, string description, Ncm ncm, Cest? cest, string unit, Money price, ProductOrigin origin, Guid taxRuleId)
     {
+        Gtin = gtin;
         Description = Required(description, "Descrição", DescriptionMaxLength);
         Ncm = ncm;
         Cest = cest;

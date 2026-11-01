@@ -2,11 +2,10 @@ using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Extensions.DependencyInjection;
-using PosNfce.Desktop.Catalog.Ibpt;
 using PosNfce.Desktop.Checkout;
 using PosNfce.Desktop.Catalog.Products;
-using PosNfce.Desktop.Catalog.TaxRules;
-using PosNfce.Desktop.Fiscal.Issuer;
+using PosNfce.Desktop.Fiscal.Documents;
+using PosNfce.Desktop.Settings;
 using PosNfce.SharedKernel;
 
 namespace PosNfce.Desktop;
@@ -43,11 +42,12 @@ public sealed partial class MainViewModel : ObservableObject
     public IReadOnlyList<NavigationItem> Menu { get; } =
     [
         new("Caixa", typeof(CheckoutViewModel)),
+        new("Notas fiscais", typeof(FiscalDocumentsViewModel)),
         new("Produtos", typeof(ProductsViewModel)),
-        new("Regras tributárias", typeof(TaxRulesViewModel)),
-        new("Tabela IBPT", typeof(IbptViewModel)),
-        new("Emitente", typeof(IssuerViewModel)),
     ];
+
+    /// <summary>Pinned to the bottom of the menu: issuer, printer and tax tables, set up once and rarely visited.</summary>
+    public NavigationItem SettingsItem { get; } = new("Configurações", typeof(SettingsViewModel));
 
     [ObservableProperty]
     public partial object? CurrentPage { get; set; }
@@ -65,7 +65,13 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void Navigate(NavigationItem item)
     {
-        foreach (var entry in Menu)
+        // Same page again: WPF would reuse its view for the new ViewModel without raising Loaded, leaving it empty.
+        if (item.IsSelected && CurrentPage?.GetType() == item.PageType)
+        {
+            return;
+        }
+
+        foreach (var entry in Menu.Append(SettingsItem))
         {
             entry.IsSelected = entry == item;
         }

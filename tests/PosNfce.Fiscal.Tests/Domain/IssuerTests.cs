@@ -13,7 +13,7 @@ public class IssuerTests
     private static readonly DateTimeOffset Now = new(2026, 10, 24, 12, 0, 0, TimeSpan.FromHours(-3));
 
     internal static IssuerProfile Profile(string cnpj = Headquarters) => new(
-        Cnpj.Parse(cnpj), "0012345678901", "Empresa Teste Ltda", null, TaxRegime.SimplesNacional,
+        Cnpj.Parse(cnpj), "0623079040081", "Empresa Teste Ltda", null, TaxRegime.SimplesNacional,
         new IssuerAddress("Rua A", "100", null, "Centro", "Belo Horizonte", "3106200", BrazilianState.Parse("MG"), "30110-000"),
         "(31) 3333-4444");
 

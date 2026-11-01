@@ -19,6 +19,12 @@ public sealed class ProductRepository(CatalogDbContext db) : IProductRepository
         return record is null ? null : ToDomain(record);
     }
 
+    public async Task<IReadOnlyList<Product>> FindByCodesAsync(IReadOnlyCollection<string> codes, CancellationToken cancellationToken = default)
+    {
+        var records = await db.Products.AsNoTracking().Where(p => codes.Contains(p.Code)).ToListAsync(cancellationToken);
+        return records.Select(ToDomain).ToList();
+    }
+
     public async Task<Product?> FindByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var record = await db.Products.AsNoTracking().SingleOrDefaultAsync(p => p.Id == id, cancellationToken);

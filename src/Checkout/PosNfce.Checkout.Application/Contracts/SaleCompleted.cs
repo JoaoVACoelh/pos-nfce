@@ -14,7 +14,8 @@ public sealed record SaleCompleted(
     decimal Total,
     decimal Change,
     IReadOnlyList<SoldItem> Items,
-    IReadOnlyList<ReceivedPayment> Payments) : IDomainEvent;
+    IReadOnlyList<ReceivedPayment> Payments,
+    string? CustomerCpf = null) : IDomainEvent;
 
 public sealed record SoldItem(
     int Line,
@@ -36,7 +37,8 @@ public sealed record SoldItem(
     string CofinsCst,
     decimal CofinsRate,
     string IbsCbsCst,
-    string ClassTrib);
+    string ClassTrib,
+    decimal IbsCbsReduction);
 
 /// <summary>
 /// Method is the name of Checkout's PaymentMethod (Cash, CreditCard, DebitCard, Pix).

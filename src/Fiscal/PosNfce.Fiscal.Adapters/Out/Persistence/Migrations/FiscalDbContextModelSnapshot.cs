@@ -17,11 +17,244 @@ namespace PosNfce.Fiscal.Adapters.Out.Persistence.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.13");
 
+            modelBuilder.Entity("PosNfce.Fiscal.Adapters.Out.Persistence.FiscalDocumentRecord", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AccessKey")
+                        .HasMaxLength(44)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("AdditionalInfo")
+                        .HasMaxLength(5000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset?>("AuthorizedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Change")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ConsultUrl")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CustomerCpf")
+                        .HasMaxLength(11)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Discount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("LastMessage")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("LastStatusCode")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("Number")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Protocol")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("QrCode")
+                        .HasMaxLength(600)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("SaleId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("Series")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTimeOffset>("SoldAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("Total")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SaleId")
+                        .IsUnique();
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("Series", "Number")
+                        .IsUnique();
+
+                    b.ToTable("fiscal_documents", (string)null);
+                });
+
+            modelBuilder.Entity("PosNfce.Fiscal.Adapters.Out.Persistence.FiscalItemRecord", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Cest")
+                        .HasMaxLength(7)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Cfop")
+                        .IsRequired()
+                        .HasMaxLength(4)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ClassTrib")
+                        .IsRequired()
+                        .HasMaxLength(6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CofinsCst")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("CofinsRate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Csosn")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Discount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("DocumentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("GrossTotal")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Gtin")
+                        .IsRequired()
+                        .HasMaxLength(14)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("IbsCbsCst")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("IbsCbsReduction")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Line")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Ncm")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Origin")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PisCst")
+                        .IsRequired()
+                        .HasMaxLength(2)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("PisRate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(6)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentId");
+
+                    b.ToTable("fiscal_document_items", (string)null);
+                });
+
+            modelBuilder.Entity("PosNfce.Fiscal.Adapters.Out.Persistence.FiscalPaymentRecord", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("DocumentId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("Integrated")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Method")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DocumentId");
+
+                    b.ToTable("fiscal_document_payments", (string)null);
+                });
+
+            modelBuilder.Entity("PosNfce.Fiscal.Adapters.Out.Persistence.IbsCbsRateRecord", b =>
+                {
+                    b.Property<DateOnly>("ValidFrom")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Cbs")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("IbsMunicipal")
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("IbsState")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("ValidFrom");
+
+                    b.ToTable("fiscal_ibs_cbs_rates", (string)null);
+                });
+
             modelBuilder.Entity("PosNfce.Fiscal.Adapters.Out.Persistence.IssuerRecord", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
+
+                    b.Property<bool>("AutoIssue")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("CertificateCnpj")
                         .HasMaxLength(14)
@@ -120,6 +353,70 @@ namespace PosNfce.Fiscal.Adapters.Out.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("fiscal_issuers", (string)null);
+                });
+
+            modelBuilder.Entity("PosNfce.Fiscal.Adapters.Out.Persistence.ReceiptPrinterRecord", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("CodePage")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Columns")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Connection")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("CutPaper")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Host")
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Port")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("PrintAfterAuthorization")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("PrinterName")
+                        .HasMaxLength(260)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("QrCode")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("fiscal_receipt_printer", (string)null);
+                });
+
+            modelBuilder.Entity("PosNfce.Fiscal.Adapters.Out.Persistence.FiscalItemRecord", b =>
+                {
+                    b.HasOne("PosNfce.Fiscal.Adapters.Out.Persistence.FiscalDocumentRecord", null)
+                        .WithMany("Items")
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PosNfce.Fiscal.Adapters.Out.Persistence.FiscalPaymentRecord", b =>
+                {
+                    b.HasOne("PosNfce.Fiscal.Adapters.Out.Persistence.FiscalDocumentRecord", null)
+                        .WithMany("Payments")
+                        .HasForeignKey("DocumentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("PosNfce.Fiscal.Adapters.Out.Persistence.FiscalDocumentRecord", b =>
+                {
+                    b.Navigation("Items");
+
+                    b.Navigation("Payments");
                 });
 #pragma warning restore 612, 618
         }

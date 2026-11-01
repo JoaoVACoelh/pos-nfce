@@ -21,11 +21,13 @@ public sealed record IssuerDetails(
     long NextNumber,
     string? CscTokenId,
     bool HasCsc,
-    CertificateSummary? Certificate);
+    CertificateSummary? Certificate,
+    bool AutoIssue,
+    bool NumberingLocked);
 
 public sealed record CertificateSummary(string Cnpj, string Subject, DateTimeOffset NotAfter);
 
-public sealed class GetIssuer(IIssuerRepository issuers)
+public sealed class GetIssuer(IIssuerRepository issuers, IFiscalDocumentRepository documents)
 {
     public async Task<IssuerDetails?> ExecuteAsync(CancellationToken cancellationToken = default)
     {
@@ -45,6 +47,8 @@ public sealed class GetIssuer(IIssuerRepository issuers)
             address.CityName, address.CityCode, address.State.Code, address.PostalCode, profile.Phone,
             issuer.Series, issuer.NextNumber,
             issuer.Csc?.TokenId, issuer.Csc is not null,
-            certificate is null ? null : new CertificateSummary(certificate.Cnpj.Formatted, certificate.Subject, certificate.NotAfter));
+            certificate is null ? null : new CertificateSummary(certificate.Cnpj.Formatted, certificate.Subject, certificate.NotAfter),
+            issuer.AutoIssue,
+            await documents.AnyNumberedAsync(cancellationToken));
     }
 }

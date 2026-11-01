@@ -29,12 +29,13 @@ public sealed class IssuerUseCaseTests : IDisposable
         .UseSqlite(_connection, sqlite => sqlite.MigrationsHistoryTable(FiscalDbContext.MigrationsHistoryTable))
         .Options);
 
-    private SaveIssuer NewSave() => new(new IssuerRepository(NewContext(), _secrets), new X509CertificateReader(), TimeProvider.System);
+    private SaveIssuer NewSave() =>
+        new(new IssuerRepository(NewContext(), _secrets), new FiscalDocumentRepository(NewContext()), new X509CertificateReader(), TimeProvider.System);
 
-    private GetIssuer NewGet() => new(new IssuerRepository(NewContext(), _secrets));
+    private GetIssuer NewGet() => new(new IssuerRepository(NewContext(), _secrets), new FiscalDocumentRepository(NewContext()));
 
     private static SaveIssuerCommand Command(string? csc = "ABCDEF123456", byte[]? pfx = null) => new(
-        Cnpj: "11.222.333/0001-81", StateRegistration: "0012345678901", LegalName: "Empresa Teste Ltda", TradeName: "Mercadinho Teste",
+        Cnpj: "11.222.333/0001-81", StateRegistration: "0623079040081", LegalName: "Empresa Teste Ltda", TradeName: "Mercadinho Teste",
         Street: "Rua A", Number: "100", Complement: null, District: "Centro", CityName: "Belo Horizonte", CityCode: "3106200",
         State: "MG", PostalCode: "30110-000", Phone: null, Series: 1, NextNumber: 1,
         CscTokenId: "000001", Csc: csc, CertificatePfx: pfx, CertificatePassword: pfx is null ? null : TestCertificates.Password);

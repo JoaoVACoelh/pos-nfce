@@ -12,6 +12,14 @@ public sealed partial class TaxRulesViewModel(UseCaseRunner useCases) : FormView
 {
     public ObservableCollection<TaxRuleSummary> TaxRules { get; } = [];
 
+    public IReadOnlyList<CodeOption> CfopOptions => TaxCodeOptions.Cfop;
+
+    public IReadOnlyList<CodeOption> CsosnOptions => TaxCodeOptions.Csosn;
+
+    public IReadOnlyList<CodeOption> PisCofinsCstOptions => TaxCodeOptions.PisCofinsCst;
+
+    public IReadOnlyList<CodeOption> IbsCbsCstOptions => TaxCodeOptions.IbsCbsCst;
+
     [ObservableProperty]
     public partial string Name { get; set; } = "";
 
@@ -39,6 +47,9 @@ public sealed partial class TaxRulesViewModel(UseCaseRunner useCases) : FormView
     [ObservableProperty]
     public partial string ClassTrib { get; set; } = "";
 
+    [ObservableProperty]
+    public partial string IbsCbsReduction { get; set; } = "0";
+
     [RelayCommand]
     public async Task LoadAsync()
     {
@@ -59,13 +70,13 @@ public sealed partial class TaxRulesViewModel(UseCaseRunner useCases) : FormView
                 Name, Cfop, Csosn,
                 PisCst, ParseDecimal(PisRate, "Alíquota de PIS"),
                 CofinsCst, ParseDecimal(CofinsRate, "Alíquota de COFINS"),
-                IbsCbsCst, ClassTrib);
+                IbsCbsCst, ClassTrib, ParseDecimal(IbsCbsReduction, "Redução do IBS/CBS"));
 
             await useCases.RunAsync<RegisterTaxRule, Guid>(u => u.ExecuteAsync(command));
 
             var registered = Name;
             Name = Cfop = Csosn = PisCst = CofinsCst = IbsCbsCst = ClassTrib = "";
-            PisRate = CofinsRate = "0";
+            PisRate = CofinsRate = IbsCbsReduction = "0";
             await LoadAsync();
             ShowSuccess($"Regra \"{registered}\" cadastrada.");
         }

@@ -29,4 +29,6 @@ public sealed class IssuerRecord
     public string? CertificateCnpj { get; set; }
     public string? CertificateSubject { get; set; }
     public DateTimeOffset? CertificateNotAfter { get; set; }
+
+    public bool AutoIssue { get; set; }
 }

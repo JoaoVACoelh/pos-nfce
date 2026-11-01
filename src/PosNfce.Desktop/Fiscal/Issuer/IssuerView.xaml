@@ -115,15 +115,15 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0">
                         <Label Content="Série *" Target="{Binding ElementName=SeriesBox}" />
-                        <TextBox x:Name="SeriesBox" Text="{Binding Series}" MaxLength="3" />
+                        <TextBox x:Name="SeriesBox" Text="{Binding Series}" MaxLength="3" IsReadOnly="{Binding NumberingLocked}" />
                     </StackPanel>
                     <StackPanel Grid.Column="2">
                         <Label Content="Próximo número *" Target="{Binding ElementName=NextNumberBox}" />
-                        <TextBox x:Name="NextNumberBox" Text="{Binding NextNumber}" MaxLength="9" />
+                        <TextBox x:Name="NextNumberBox" Text="{Binding NextNumber}" MaxLength="9" IsReadOnly="{Binding NumberingLocked}" />
                     </StackPanel>
                 </Grid>
                 <TextBlock Style="{StaticResource Hint}"
-                           Text="Só altere se souber o que está fazendo: números pulados precisam ser inutilizados na SEFAZ." />
+                           x:Name="NumberingHintText" Text="{Binding NumberingHint}" />
 
                 <TextBlock Text="CSC (código de segurança do contribuinte)" Style="{StaticResource SectionTitle}" />
                 <Grid>
@@ -167,6 +167,12 @@
                 <PasswordBox x:Name="CertificatePasswordBox" PasswordChanged="OnPasswordChanged" />
                 <TextBlock Style="{StaticResource Hint}"
                            Text="O arquivo e a senha ficam criptografados neste computador. Uma cópia do banco levada para outro computador não abre o certificado." />
+
+                <TextBlock Text="Envio à SEFAZ" Style="{StaticResource SectionTitle}" />
+                <CheckBox x:Name="AutoIssueBox" IsChecked="{Binding AutoIssue}" Margin="0,8,0,0" FontSize="14"
+                          Content="Enviar a NFC-e automaticamente ao concluir cada venda" />
+                <TextBlock Style="{StaticResource Hint}"
+                           Text="Ligue só com o certificado e o CSC reais da loja: o certificado de desenvolvimento é recusado pela SEFAZ. Desligado, as notas ficam em &quot;Notas fiscais&quot; para enviar pelo botão." />
             </StackPanel>
 
             <StackPanel Grid.Row="2" Grid.ColumnSpan="3" Margin="0,24,0,0">

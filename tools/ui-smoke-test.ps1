@@ -39,8 +39,24 @@ function FindByName($name) {
     throw "element '$name' not found"
 }
 function Fill($id, $text) { (Find $id).GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).SetValue($text) }
+# Closed drop-down of codes (Shared/CodeOption): items are named "<code> - <name>"
+function Pick($id, $code) {
+    $box = Find $id
+    $box.GetCurrentPattern([System.Windows.Automation.ExpandCollapsePattern]::Pattern).Expand(); Start-Sleep -Milliseconds 300
+    $items = $box.FindAll($Tree::Descendants, (New-Object $C ($A::ControlTypeProperty, [System.Windows.Automation.ControlType]::ListItem)))
+    $item = $items | Where-Object { $_.Current.Name -like "$code - *" } | Select-Object -First 1
+    if (-not $item) { throw "option $code not found in $id" }
+    $item.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Select()
+    $box.GetCurrentPattern([System.Windows.Automation.ExpandCollapsePattern]::Pattern).Collapse(); Start-Sleep -Milliseconds 200
+}
 function Click($e) { $e.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke(); Start-Sleep -Milliseconds 700 }
 function Message { (Find "MessageText").Current.Name }
+# Issuer, printer and tax screens live under "Configurações" (bottom of the side menu), as tabs
+function Settings($tab, $sub) {
+    Click (Find "SettingsButton")
+    Click (FindByName $tab)
+    if ($sub) { Click (FindByName $sub) }
+}
 function Shot($name) {
     $r = $script:win.Current.BoundingRectangle
     $bmp = New-Object System.Drawing.Bitmap ([int]$r.Width), ([int]$r.Height)
@@ -56,10 +72,10 @@ try {
     Shot "1-checkout-empty"
 
     # Tax rule (fictitious values, test database only)
-    Click (FindByName "Regras tributárias")
+    Settings "Impostos" "Regras tributárias"
     Fill "NameBox" "Mercadorias em geral (TESTE)"
-    Fill "CfopBox" "5102"; Fill "CsosnBox" "102"
-    Fill "PisCstBox" "49"; Fill "CofinsCstBox" "49"
+    Fill "CfopBox" "5102"; Pick "CsosnBox" "102"
+    Pick "PisCstBox" "49"; Pick "CofinsCstBox" "49"
     Fill "IbsCbsCstBox" "000"; Fill "ClassTribBox" "000001"
     Click (FindByName "Salvar")
     "tax rule: $(Message)"
@@ -90,7 +106,7 @@ try {
 
     # IBPT table: fictitious sample file used by the tests
     $sample = Join-Path $PSScriptRoot "..\tests\PosNfce.Catalog.Tests\TestData\ibpt-sample.csv"
-    Click (FindByName "Tabela IBPT")
+    Settings "Impostos" "Tabela IBPT"
     "ibpt before: $((Find 'StatusText').Current.Name)"
     Fill "FilePathBox" (Resolve-Path $sample).Path
     Click (FindByName "Importar")
@@ -99,10 +115,16 @@ try {
     "ibpt after: $((Find 'StatusText').Current.Name)"
     Shot "5-ibpt"
 
+    # IBS/CBS rates for 2027 (fictitious values, test database only)
+    Settings "Impostos" "Alíquotas IBS/CBS"
+    Fill "ValidFromBox" "01/01/2027"; Fill "IbsStateBox" "0,5"; Fill "IbsMunicipalBox" "0,5"; Fill "CbsBox" "9"; Fill "SourceBox" "TESTE"
+    Click (FindByName "Salvar")
+    "ibs/cbs rates: $(Message)"
+
     # Issuer with the development certificate (dotnet run tools/create-dev-certificate.cs), fictitious data
     $certificate = Join-Path $PSScriptRoot "..\data\dev-certificate.pfx"
-    Click (FindByName "Emitente")
-    Fill "CnpjBox" "11.222.333/0001-81"; Fill "IeBox" "0012345678901"
+    Settings "Emitente"
+    Fill "CnpjBox" "11.222.333/0001-81"; Fill "IeBox" "0623079040081"
     Fill "LegalNameBox" "EMPRESA DE DESENVOLVIMENTO LTDA"; Fill "TradeNameBox" "Mercadinho Teste"
     Fill "StreetBox" "Rua A"; Fill "NumberBox" "100"; Fill "DistrictBox" "Centro"
     Fill "CityNameBox" "Belo Horizonte"; Fill "CityCodeBox" "3106200"; Fill "PostalCodeBox" "30110-000"
@@ -120,7 +142,7 @@ try {
 
     # Leave and come back: data must be reloaded from the database, CSC field empty
     Click (FindByName "Produtos")
-    Click (FindByName "Emitente")
+    Settings "Emitente"
     "reloaded trade name: $((Find 'TradeNameBox').GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).Current.Value)"
     "reloaded csc field: '$((Find 'CscBox').GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).Current.Value)'"
 
@@ -130,26 +152,75 @@ try {
     function Keys($keys) { [System.Windows.Forms.SendKeys]::SendWait($keys); Start-Sleep -Milliseconds 600 }
     Keys "999{ENTER}"                   # unknown code: warning, screen keeps working
     "checkout unknown: $(Message)"
-    Keys "2*7891234567895{ENTER}"       # 2 x R$ 5,49 = R$ 10,98
+    Keys "{F11}"; Keys "2{ENTER}"        # quantity field, then back to the code field
+    Keys "7891234567895{ENTER}"         # 2 x R$ 5,49 = R$ 10,98
+    "checkout quantity after item: $((Find 'QuantityBox').GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).Current.Value)"
     Keys "{F3}"; Keys "0,98{ENTER}"     # discount -> R$ 10,00
     "checkout total: $((Find 'TotalText').Current.Name)"
+    Keys "{F10}"; Keys "52998224725{ENTER}"  # CPF na nota (fictitious, valid check digits)
+    "checkout cpf: $((Find 'CustomerCpfText').Current.Name)"
     Keys "{F2}"                         # payment panel, amount prefilled with what is left
     Keys "{F7}"; Keys "4{ENTER}"        # R$ 4,00 on the debit card terminal
-    Keys "{F5}"; Keys "10{ENTER}"       # R$ 10,00 in cash
-    "checkout remaining: $((Find 'RemainingText').Current.Name) / $(Message)"
-    Shot "7-checkout-paid"
-    Keys "{ENTER}"                      # close the sale
-    "checkout result: $((Find 'LastSaleText').Current.Name)"
+    Keys "{F5}"; Keys "10{ENTER}"       # R$ 10,00 in cash: settles the total and closes the sale
+    "checkout result: $((Find 'LastSaleText').Current.Name) $((Find 'LastChangeText').Current.Name) | $((Find 'NfceStatusText').Current.Name) | button: $((Find 'PrintNfceButton').Current.Name)"
     Shot "8-checkout-done"
 
     # Same kind of sale with the mouse: Finish button, PIX button, confirm button
     Keys "7891234567895{ENTER}"
     Click (Find "FinishButton")
     Click (FindByName "PIX")
-    Click (Find "ConfirmPaymentButton")     # adds R$ 5,49 in PIX
-    "mouse sale button: $((Find 'ConfirmPaymentButton').Current.Name)"
-    Click (Find "ConfirmPaymentButton")     # closes the sale
-    "mouse sale result: $((Find 'LastSaleText').Current.Name)"
+    Click (Find "ConfirmPaymentButton")     # R$ 5,49 in PIX settles the total and closes the sale
+    "mouse sale result: $((Find 'LastSaleText').Current.Name) | $((Find 'NfceStatusText').Current.Name)"
+
+    # Both sales became pending NFC-e documents
+    Click (FindByName "Notas fiscais")
+    "fiscal documents: $((Find 'SummaryText').Current.Name)"
+    # Signed XML of the latest one (homologation, development certificate, nothing sent)
+    $docs = Find "DocumentsGrid"
+    $firstRow = $docs.FindFirst($Tree::Children, (New-Object $C ($A::ControlTypeProperty, [System.Windows.Automation.ControlType]::DataItem)))
+    $firstRow.GetCurrentPattern([System.Windows.Automation.SelectionItemPattern]::Pattern).Select()
+    Start-Sleep -Milliseconds 400
+    Click (Find "PrepareXmlButton")
+    Start-Sleep -Seconds 2
+    "signed xml: $(Message)"
+    Shot "8b-fiscal-documents"
+    # DANFCE preview of the signed document (modal window; Esc closes it)
+    Click (Find "DanfceButton")
+    Start-Sleep -Seconds 1
+    $danfce = [System.Windows.Automation.AutomationElement]::RootElement.FindFirst($Tree::Descendants, (New-Object $C ($A::NameProperty, "DANFCE")))
+    "danfce window: $($null -ne $danfce)"
+    Shot "8c-danfce"
+    Keys "{ESC}"
+
+    # Numbering is locked now that a document took a number
+    Settings "Emitente"
+    "numbering locked: $((Find 'NextNumberBox').GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).Current.IsReadOnly) / $((Find 'NumberingHintText').Current.Name)"
+
+    # Printer screen: a local TCP listener plays a network ESC/POS printer and receives the test page
+    $listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, 0)
+    $listener.Start()
+    $printerPort = $listener.LocalEndpoint.Port
+    $accept = $listener.AcceptTcpClientAsync()
+    Settings "Impressora"
+    (Find "ConnectionBox").SetFocus()
+    Keys "{DOWN}"                       # "Rede (IP)"
+    Fill "HostBox" "127.0.0.1"
+    Fill "PortBox" "$printerPort"
+    Click (Find "TestPageButton")
+    Start-Sleep -Seconds 1
+    "printer test: $(Message)"
+    if ($accept.Wait(3000)) {
+        $stream = $accept.Result.GetStream(); $buffer = New-Object byte[] 65536; $total = 0
+        $stream.ReadTimeout = 2000
+        try { while (($n = $stream.Read($buffer, $total, $buffer.Length - $total)) -gt 0) { $total += $n } } catch {}
+        "printer bytes: $total, starts with ESC @: $($buffer[0] -eq 0x1B -and $buffer[1] -eq 0x40), ends with cut: $($buffer[$total-3] -eq 0x1D -and $buffer[$total-2] -eq 0x56)"
+        $accept.Result.Dispose()
+    } else { "printer bytes: nothing received" }
+    $listener.Stop()
+    Click (Find "SavePrinterButton")
+    "printer save: $(Message)"
+    Shot "8d-printer"
+    Click (FindByName "Caixa")
 
     # Hamburger slides the side menu closed and open (animated: the items stay in the tree, but off screen)
     function MenuVisible { ((FindByName "Produtos").Current.BoundingRectangle.Right - $script:win.Current.BoundingRectangle.Left) -gt 100 }
@@ -165,9 +236,19 @@ try {
     $script:win.GetCurrentPattern([System.Windows.Automation.WindowPattern]::Pattern).SetWindowVisualState("Normal")
     $script:win.GetCurrentPattern([System.Windows.Automation.TransformPattern]::Pattern).Resize(1000, 600)
     Start-Sleep -Milliseconds 800
+    # ...and works with arrows + Enter only
     Keys "7891234567895{ENTER}"
-    Keys "{F2}"
+    Shot "10a-small-actions"            # "Finalizar venda" highlighted
+    Keys "{RIGHT}{RIGHT}{ENTER}"        # empty field: -> -> highlights "CPF na nota", Enter opens it
+    "keyboard cpf field open: $(-not (Find 'CpfBox').Current.IsOffscreen)"
+    Keys "{ESC}"
+    Keys "{LEFT}{LEFT}{ENTER}"          # back to "Finalizar venda": Enter opens the payment
+    Keys "{DOWN}{DOWN}"                 # down arrow in the amount field picks the method: Dinheiro -> Credito -> Debito
+    "keyboard payment method: $((Find 'PaymentMethodText').Current.Name)"
     Shot "10-small-window"
+    Keys "{ENTER}"                      # pays the amount prefilled and closes the sale: the card must fit the narrow window
+    Keys "{RIGHT}"                      # highlights "Tentar de novo" (not pressed: it would call SEFAZ)
+    Shot "10c-small-done"
 }
 finally {
     Stop-Process $proc.Id -Force -ErrorAction SilentlyContinue

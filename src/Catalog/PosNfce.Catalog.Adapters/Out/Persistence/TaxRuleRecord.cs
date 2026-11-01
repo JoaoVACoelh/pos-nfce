@@ -13,4 +13,5 @@ public sealed class TaxRuleRecord
     public decimal CofinsRate { get; set; }
     public string IbsCbsCst { get; set; } = "";
     public string ClassTrib { get; set; } = "";
+    public decimal IbsCbsReduction { get; set; }
 }

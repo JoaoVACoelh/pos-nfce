@@ -16,6 +16,7 @@ public sealed class CheckoutDbContext(DbContextOptions<CheckoutDbContext> option
             sale.ToTable("checkout_sales");
             sale.HasKey(s => s.Id);
             sale.HasIndex(s => s.Status);
+            sale.Property(s => s.CustomerCpf).HasMaxLength(11);
             sale.HasMany(s => s.Items).WithOne().HasForeignKey(i => i.SaleId).OnDelete(DeleteBehavior.Cascade);
             sale.HasMany(s => s.Payments).WithOne().HasForeignKey(p => p.SaleId).OnDelete(DeleteBehavior.Cascade);
         });

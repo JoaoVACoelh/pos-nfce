@@ -26,9 +26,11 @@ public sealed record SaveIssuerCommand(
     string? CscTokenId,
     string? Csc,
     byte[]? CertificatePfx,
-    string? CertificatePassword);
+    string? CertificatePassword,
+    bool AutoIssue = false);
 
-public sealed class SaveIssuer(IIssuerRepository issuers, ICertificateReader certificates, TimeProvider clock)
+public sealed class SaveIssuer(
+    IIssuerRepository issuers, IFiscalDocumentRepository documents, ICertificateReader certificates, TimeProvider clock)
 {
     public async Task ExecuteAsync(SaveIssuerCommand command, CancellationToken cancellationToken = default)
     {
@@ -48,6 +50,12 @@ public sealed class SaveIssuer(IIssuerRepository issuers, ICertificateReader cer
         if (issuer is null)
         {
             issuer = Issuer.Register(profile, command.Series, command.NextNumber);
+        }
+        else if (await documents.AnyNumberedAsync(cancellationToken))
+        {
+            // Numbers already went to documents: changing the series or going back would repeat numbers, and skipping
+            // ahead leaves gaps that must be voided at SEFAZ. The screen shows them read-only; the stored ones are kept.
+            issuer.Update(profile, issuer.Series, issuer.NextNumber);
         }
         else
         {
@@ -70,6 +78,8 @@ public sealed class SaveIssuer(IIssuerRepository issuers, ICertificateReader cer
             var info = certificates.Read(pfx, password);
             issuer.AttachCertificate(new IssuerCertificate(pfx, password, info), clock.GetLocalNow());
         }
+
+        issuer.SetAutoIssue(command.AutoIssue);
 
         // CSC and certificate may still be missing (they depend on the SEFAZ accreditation); issuing will require them.
         await issuers.SaveAsync(issuer, cancellationToken);
